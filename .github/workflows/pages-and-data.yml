@@ -1,0 +1,77 @@
+name: Build Pages and Issues Data
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate issues data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: Studio-Dashosa/abstract-garden-video
+        run: |
+          mkdir -p docs/data
+          node -e '
+          const https = require("https");
+          const fs = require("fs");
+          const repo = process.env.REPO;
+          const opts = {
+            headers: {
+              "User-Agent": "actions",
+              "Authorization": `Bearer ${process.env.GH_TOKEN}`,
+              "Accept": "application/vnd.github+json"
+            }
+          };
+          const url = `https://api.github.com/repos/${repo}/issues?state=all&per_page=100`;
+          https.get(url, opts, res => {
+            let data = "";
+            res.on("data", c => data += c);
+            res.on("end", () => {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                fs.writeFileSync("docs/data/issues.json", data);
+                console.log("Wrote docs/data/issues.json");
+              } else {
+                console.error("Failed to fetch issues:", res.statusCode, data);
+                process.exit(1);
+              }
+            });
+          }).on("error", err => { console.error(err); process.exit(1); });
+          '
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
