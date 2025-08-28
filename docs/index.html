@@ -577,6 +577,13 @@
         </div>
     </div>
 
+    <!-- Load game modules -->
+    <script src="js/memory-fragments.js"></script>
+    <script src="js/audio-system.js"></script>
+    <script type="module" src="js/game-state.js"></script>
+    <script type="module" src="js/dashboard-integration.js"></script>
+    <script type="module" src="js/story-system.js"></script>
+    
     <script>
         // Global state
         let issues = [];
@@ -731,28 +738,67 @@
 
         function showMemory(id) {
             const modal = document.getElementById('story-modal');
-            document.getElementById('story-title').textContent = `Memory Fragment ${id}`;
-            document.getElementById('story-content').textContent = 
-                `The echoes of creation whisper: Fragment ${id} reveals the ancient knowledge of the digital realm...`;
+            const memory = window.memoryFragments ? window.memoryFragments[id - 1] : null;
+            
+            if (memory) {
+                document.getElementById('story-title').textContent = memory.title;
+                document.getElementById('story-content').textContent = memory.text;
+                
+                // Play narration if enabled
+                if (window.audioSystem && window.audioSystem.voEnabled) {
+                    window.audioSystem.playMemoryNarration(memory.text, id);
+                }
+                
+                // Award souls and embers
+                console.log(`Memory ${id} unlocked: +${memory.souls} souls, +${memory.embers} embers`);
+            } else {
+                document.getElementById('story-title').textContent = `Memory Fragment ${id}`;
+                document.getElementById('story-content').textContent = 
+                    `The echoes of creation whisper: Fragment ${id} reveals the ancient knowledge of the digital realm...`;
+            }
+            
             modal.style.display = 'block';
         }
 
+        // Initialize audio system
+        let audioSystem = null;
+        
         // Audio toggles
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
+            
+            // Initialize audio system
+            audioSystem = new AudioSystem();
+            window.audioSystem = audioSystem;
             
             // Auto-refresh every 5 minutes
             setInterval(loadData, 5 * 60 * 1000);
             
             // Audio controls
             document.getElementById('vo-toggle').addEventListener('click', function() {
-                this.classList.toggle('active');
-                this.textContent = this.classList.contains('active') ? 'Voice: British Lady' : 'Voice: Silent';
+                const enabled = audioSystem.toggleVO();
+                this.classList.toggle('active', enabled);
+                this.textContent = enabled ? 'Voice: British Lady' : 'Voice: Silent';
             });
             
             document.getElementById('music-toggle').addEventListener('click', function() {
-                this.classList.toggle('active');
-                this.textContent = this.classList.contains('active') ? 'Ambience: Active' : 'Ambience: Silent';
+                const enabled = audioSystem.toggleMusic();
+                this.classList.toggle('active', enabled);
+                this.textContent = enabled ? 'Ambience: Active' : 'Ambience: Silent';
+            });
+            
+            // Story mode button
+            document.getElementById('story-mode').addEventListener('click', function() {
+                // Show all memories in sequence
+                alert('Story mode: Experience all unlocked memories in sequence (coming soon)');
+            });
+            
+            // Close modal handler
+            document.getElementById('story-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    if (audioSystem) audioSystem.stopNarration();
+                }
             });
         });
     </script>

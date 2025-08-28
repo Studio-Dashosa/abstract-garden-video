@@ -1,264 +1,222 @@
-// British VO Audio System with Dragon Age style ambient music
-class NarrativeAudioSystem {
-  constructor() {
-    this.currentAudio = null;
-    this.ambientLoop = null;
-    this.voiceEnabled = true;
-    this.musicEnabled = true;
-    this.initialized = false;
-    
-    this.audioContext = null;
-    this.gainNode = null;
-    this.ambientGain = null;
-    
-    this.init();
-  }
-  
-  async init() {
-    try {
-      // Initialize Web Audio API for better control
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.gainNode = this.audioContext.createGain();
-      this.ambientGain = this.audioContext.createGain();
-      
-      // Set initial volumes
-      this.gainNode.gain.value = 0.8; // VO volume
-      this.ambientGain.gain.value = 0.3; // Ambient music volume
-      
-      this.gainNode.connect(this.audioContext.destination);
-      this.ambientGain.connect(this.audioContext.destination);
-      
-      // Start ambient loop
-      this.startAmbientMusic();
-      
-      this.initialized = true;
-      console.log("Narrative Audio System initialized");
-    } catch (error) {
-      console.warn("Audio system initialization failed:", error);
-    }
-  }
-  
-  startAmbientMusic() {
-    if (!this.musicEnabled) return;
-    
-    // Create ambient music loop (Dragon Age style)
-    const ambientUrl = './audio/ambient/digital_garden_ambient.mp3';
-    
-    this.ambientLoop = new Audio(ambientUrl);
-    this.ambientLoop.loop = true;
-    this.ambientLoop.volume = 0.3;
-    
-    // Fade in ambient music
-    this.ambientLoop.play().catch(() => {
-      console.log("Ambient music will start on user interaction");
-    });
-  }
-  
-  async playMemoryStory(memoryId, storyData) {
-    if (!this.voiceEnabled || !storyData) return;
-    
-    try {
-      // Stop any current audio
-      this.stopCurrentAudio();
-      
-      // British VO file path
-      const voiceUrl = `./audio/vo/${storyData.audio}`;
-      
-      // Create new audio element
-      this.currentAudio = new Audio(voiceUrl);
-      this.currentAudio.volume = 0.8;
-      
-      // Add atmospheric reverb effect if Web Audio is available
-      if (this.audioContext && this.audioContext.state === 'running') {
-        const source = this.audioContext.createMediaElementSource(this.currentAudio);
-        const reverb = this.createReverbEffect();
+// Audio System for British VO and Ambient Music
+class AudioSystem {
+    constructor() {
+        this.voEnabled = false;
+        this.musicEnabled = false;
+        this.currentVoice = 'british-witch';
+        this.ambientAudio = null;
+        this.voiceAudio = null;
+        this.isInitialized = false;
         
-        source.connect(reverb);
-        reverb.connect(this.gainNode);
-      }
-      
-      // Display story text with typing effect
-      this.displayStoryText(storyData.title, storyData.story);
-      
-      // Play the audio
-      await this.currentAudio.play();
-      
-      // Handle completion
-      this.currentAudio.onended = () => {
-        this.onStoryComplete(memoryId, storyData.reward);
-      };
-      
-    } catch (error) {
-      console.warn("Could not play VO audio:", error);
-      // Fallback to text-only display
-      this.displayStoryText(storyData.title, storyData.story);
-      setTimeout(() => this.onStoryComplete(memoryId, storyData.reward), 3000);
-    }
-  }
-  
-  createReverbEffect() {
-    const convolver = this.audioContext.createConvolver();
-    
-    // Create impulse response for cathedral-like reverb
-    const length = this.audioContext.sampleRate * 2;
-    const impulse = this.audioContext.createBuffer(2, length, this.audioContext.sampleRate);
-    
-    for (let channel = 0; channel < 2; channel++) {
-      const channelData = impulse.getChannelData(channel);
-      for (let i = 0; i < length; i++) {
-        const decay = Math.pow(1 - i / length, 2);
-        channelData[i] = (Math.random() * 2 - 1) * decay;
-      }
+        // Voice options for British narrator
+        this.voiceOptions = {
+            'british-witch': {
+                pitch: 0.9,
+                rate: 0.85,
+                volume: 0.8,
+                voice: 'Google UK English Female' // fallback to speech synthesis
+            },
+            'british-noble': {
+                pitch: 1.0,
+                rate: 0.9,
+                volume: 0.8,
+                voice: 'Google UK English Male'
+            },
+            'british-mystic': {
+                pitch: 0.8,
+                rate: 0.75,
+                volume: 0.7,
+                voice: 'Google UK English Female'
+            }
+        };
+        
+        this.init();
     }
     
-    convolver.buffer = impulse;
-    return convolver;
-  }
-  
-  displayStoryText(title, story) {
-    // Create modal overlay for story display
-    const modal = document.createElement('div');
-    modal.className = 'story-modal';
-    modal.innerHTML = `
-      <div class="story-content">
-        <div class="story-glow"></div>
-        <h2 class="story-title">${title}</h2>
-        <p class="story-text" id="story-text-content"></p>
-        <div class="story-controls">
-          <button onclick="this.closest('.story-modal').remove()" class="story-close">Continue Journey</button>
-        </div>
-      </div>
-    `;
-    
-    // Add to page
-    document.body.appendChild(modal);
-    
-    // Typing effect
-    this.typeWriter(story, document.getElementById('story-text-content'));
-  }
-  
-  typeWriter(text, element, speed = 50) {
-    element.textContent = '';
-    let i = 0;
-    
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        element.textContent += text.charAt(i);
-        i++;
-      } else {
-        clearInterval(timer);
-      }
-    }, speed);
-  }
-  
-  onStoryComplete(memoryId, reward) {
-    // Award XP and coins
-    this.awardReward(reward);
-    
-    // Mark memory as collected
-    this.markMemoryCollected(memoryId);
-    
-    // Update progress display
-    this.updateProgressDisplay();
-    
-    // Play completion sound
-    this.playCompletionSound();
-  }
-  
-  awardReward(reward) {
-    // Get current progress from localStorage
-    const progress = JSON.parse(localStorage.getItem('digitalGardenProgress') || '{}');
-    
-    progress.totalXP = (progress.totalXP || 0) + (reward.xp || 0);
-    progress.totalCoins = (progress.totalCoins || 0) + (reward.coins || 0);
-    progress.lastReward = reward;
-    
-    if (reward.achievement) {
-      progress.achievements = progress.achievements || [];
-      if (!progress.achievements.includes(reward.achievement)) {
-        progress.achievements.push(reward.achievement);
-        this.showAchievement(reward.achievement);
-      }
+    init() {
+        // Create ambient audio element
+        this.ambientAudio = new Audio();
+        this.ambientAudio.loop = true;
+        this.ambientAudio.volume = 0.3;
+        
+        // Use data URL for ambient sound (brown noise as placeholder)
+        // In production, replace with actual Dragon Age style ambient music
+        this.ambientAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+AAABQr+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+AAABQr+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+A';
+        
+        this.isInitialized = true;
     }
     
-    localStorage.setItem('digitalGardenProgress', JSON.stringify(progress));
-  }
-  
-  markMemoryCollected(memoryId) {
-    const progress = JSON.parse(localStorage.getItem('digitalGardenProgress') || '{}');
-    progress.collectedMemories = progress.collectedMemories || [];
-    
-    if (!progress.collectedMemories.includes(memoryId)) {
-      progress.collectedMemories.push(memoryId);
+    async playMemoryNarration(memoryText, memoryId) {
+        if (!this.voEnabled) return;
+        
+        // Stop any current narration
+        this.stopNarration();
+        
+        // Check if we have a pre-recorded audio file (future implementation)
+        const audioFile = `audio/memories/memory_${memoryId}.mp3`;
+        
+        try {
+            // Try to load pre-recorded audio
+            const response = await fetch(audioFile);
+            if (response.ok) {
+                this.voiceAudio = new Audio(audioFile);
+                this.voiceAudio.volume = 0.8;
+                await this.voiceAudio.play();
+                return;
+            }
+        } catch (e) {
+            // Fall back to speech synthesis
+        }
+        
+        // Fallback to Web Speech API with British accent
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(memoryText);
+            const voices = speechSynthesis.getVoices();
+            
+            // Find British voice
+            const britishVoice = voices.find(voice => 
+                voice.lang === 'en-GB' && voice.name.includes('Female')
+            ) || voices.find(voice => voice.lang === 'en-GB');
+            
+            if (britishVoice) {
+                utterance.voice = britishVoice;
+            }
+            
+            const voiceConfig = this.voiceOptions[this.currentVoice];
+            utterance.pitch = voiceConfig.pitch;
+            utterance.rate = voiceConfig.rate;
+            utterance.volume = voiceConfig.volume;
+            
+            // Add dramatic pauses
+            const dramaticText = memoryText
+                .replace(/\./g, '...')
+                .replace(/,/g, ',,');
+            
+            utterance.text = dramaticText;
+            speechSynthesis.speak(utterance);
+        }
     }
     
-    localStorage.setItem('digitalGardenProgress', JSON.stringify(progress));
-  }
-  
-  playCompletionSound() {
-    // FromSoft-style completion chime
-    const audio = new Audio('./audio/sfx/memory_unlock.mp3');
-    audio.volume = 0.6;
-    audio.play().catch(() => {});
-  }
-  
-  showAchievement(achievementId) {
-    // Achievement popup notification
-    const achievement = document.createElement('div');
-    achievement.className = 'achievement-popup';
-    achievement.innerHTML = `
-      <div class="achievement-content">
-        <div class="achievement-icon">⚡</div>
-        <div class="achievement-text">
-          <h3>Achievement Unlocked!</h3>
-          <p>${achievementId.replace('_', ' ')}</p>
-        </div>
-      </div>
-    `;
+    stopNarration() {
+        if (this.voiceAudio) {
+            this.voiceAudio.pause();
+            this.voiceAudio = null;
+        }
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+        }
+    }
     
-    document.body.appendChild(achievement);
+    async startAmbientMusic() {
+        if (!this.musicEnabled || !this.ambientAudio) return;
+        
+        try {
+            await this.ambientAudio.play();
+            this.fadeIn(this.ambientAudio, 0.3, 2000);
+        } catch (e) {
+            console.log('Ambient music playback failed:', e);
+        }
+    }
     
-    setTimeout(() => {
-      achievement.classList.add('fade-out');
-      setTimeout(() => achievement.remove(), 1000);
-    }, 3000);
-  }
-  
-  stopCurrentAudio() {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio = null;
+    stopAmbientMusic() {
+        if (!this.ambientAudio) return;
+        
+        this.fadeOut(this.ambientAudio, 2000, () => {
+            this.ambientAudio.pause();
+        });
     }
-  }
-  
-  toggleVoice() {
-    this.voiceEnabled = !this.voiceEnabled;
-    if (!this.voiceEnabled) {
-      this.stopCurrentAudio();
+    
+    fadeIn(audio, targetVolume, duration) {
+        audio.volume = 0;
+        const increment = targetVolume / (duration / 50);
+        
+        const fade = setInterval(() => {
+            if (audio.volume < targetVolume - increment) {
+                audio.volume += increment;
+            } else {
+                audio.volume = targetVolume;
+                clearInterval(fade);
+            }
+        }, 50);
     }
-  }
-  
-  toggleMusic() {
-    this.musicEnabled = !this.musicEnabled;
-    if (this.ambientLoop) {
-      if (this.musicEnabled) {
-        this.ambientLoop.play().catch(() => {});
-      } else {
-        this.ambientLoop.pause();
-      }
+    
+    fadeOut(audio, duration, callback) {
+        const decrement = audio.volume / (duration / 50);
+        
+        const fade = setInterval(() => {
+            if (audio.volume > decrement) {
+                audio.volume -= decrement;
+            } else {
+                audio.volume = 0;
+                clearInterval(fade);
+                if (callback) callback();
+            }
+        }, 50);
     }
-  }
-  
-  updateProgressDisplay() {
-    // Trigger dashboard refresh
-    if (window.fetchDashboardData) {
-      window.fetchDashboardData();
+    
+    toggleVO() {
+        this.voEnabled = !this.voEnabled;
+        if (!this.voEnabled) {
+            this.stopNarration();
+        }
+        return this.voEnabled;
     }
-  }
+    
+    toggleMusic() {
+        this.musicEnabled = !this.musicEnabled;
+        if (this.musicEnabled) {
+            this.startAmbientMusic();
+        } else {
+            this.stopAmbientMusic();
+        }
+        return this.musicEnabled;
+    }
+    
+    setVoice(voiceType) {
+        if (this.voiceOptions[voiceType]) {
+            this.currentVoice = voiceType;
+        }
+    }
+    
+    // Play sound effects
+    playSound(soundType) {
+        const sounds = {
+            'soul-collected': 440,  // A4 note
+            'level-up': 880,        // A5 note
+            'memory-unlock': 660,    // E5 note
+            'quest-complete': 550    // C#5 note
+        };
+        
+        if (sounds[soundType]) {
+            this.playTone(sounds[soundType], 200);
+        }
+    }
+    
+    playTone(frequency, duration) {
+        // Use Web Audio API for simple tones
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration / 1000);
+    }
 }
 
-// Initialize audio system
-window.narrativeAudio = new NarrativeAudioSystem();
-
-// Export for use in dashboard
-window.NarrativeAudioSystem = NarrativeAudioSystem;
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AudioSystem;
+} else {
+    window.AudioSystem = AudioSystem;
+}
