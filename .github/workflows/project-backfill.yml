@@ -1,0 +1,69 @@
+name: Backfill issues to Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      state:
+        description: "Issue state to include (open | closed | all)"
+        required: false
+        default: all
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_URL: ${{ secrets.PROJECT_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Backfill issues into Project
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECTS_TOKEN }}
+          script: |
+            const core = require('@actions/core');
+            const owner = 'Studio-Dashosa';
+            const repo = 'abstract-garden-video';
+            const state = core.getInput('state') || 'all';
+            const projectUrl = process.env.PROJECT_URL;
+            if (!projectUrl) core.setFailed('PROJECT_URL secret not set');
+            const m = projectUrl.match(/projects\/(\d+)/);
+            if (!m) core.setFailed('Could not parse project number from PROJECT_URL');
+            const number = parseInt(m[1], 10);
+
+            // Get ProjectV2 ID
+            const projQ = `query($login:String!, $number:Int!){ organization(login:$login){ projectV2(number:$number){ id } } }`;
+            const projRes = await github.graphql(projQ, { login: owner, number });
+            const projectId = projRes.organization?.projectV2?.id;
+            if (!projectId) core.setFailed('Project ID not found for that number');
+
+            // Get all issues
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state, per_page: 100 });
+            core.info(`Found ${issues.length} issues (state=${state})`);
+
+            const addMut = `mutation($projectId:ID!, $contentId:ID!){ addProjectV2ItemById(input:{ projectId:$projectId, contentId:$contentId }){ item { id } } }`;
+
+            let added = 0, skipped = 0;
+            for (const issue of issues) {
+              if (issue.pull_request) { skipped++; continue; }
+              // Get node ID for this issue number
+              const nodeQ = `query($owner:String!, $repo:String!, $number:Int!){ repository(owner:$owner, name:$repo){ issue(number:$number){ id } } }`;
+              const nodeRes = await github.graphql(nodeQ, { owner, repo, number: issue.number });
+              const contentId = nodeRes.repository?.issue?.id;
+              if (!contentId) { skipped++; continue; }
+
+              try {
+                await github.graphql(addMut, { projectId, contentId });
+                added++;
+              } catch (e) {
+                // Likely already added or permissions; log and continue
+                core.info(`Skip #${issue.number}: ${e.message}`);
+                skipped++;
+              }
+            }
+            core.info(`Backfill complete. Added: ${added}, Skipped: ${skipped}`);
