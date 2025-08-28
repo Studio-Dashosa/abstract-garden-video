@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abstract Garden - 3D Learning Dashboard</title>
+    <title>Abstract Garden - Souls of Creation</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Text:ital@0;1&family=JetBrains+Mono:wght@300;400&display=swap');
         
+        /* FromSoft Dark Theme - No gradients, pure darkness */
         :root {
-            --bg-primary: #0B0E11;
-            --bg-secondary: #161922;
-            --bg-card: #1F2937;
-            --accent-primary: #7C3AED;
-            --accent-secondary: #F59E0B;
-            --accent-success: #10B981;
-            --text-primary: #F9FAFB;
-            --text-secondary: #D1D5DB;
-            --text-muted: #9CA3AF;
-            --border-primary: #374151;
-            --border-accent: #7C3AED;
-            --glow-primary: rgba(124, 58, 237, 0.4);
-            --glow-secondary: rgba(245, 158, 11, 0.3);
+            --blood-dark: #0A0806;
+            --ash-black: #141210;
+            --stone-dark: #1C1A17;
+            --ember-glow: #B8860B;
+            --blood-red: #8B0000;
+            --soul-blue: #4169E1;
+            --pale-text: #C4B5A0;
+            --faded-text: #8B8378;
+            --border-iron: #3A3532;
+            --success-green: #2F4F2F;
         }
 
         * {
@@ -30,822 +28,560 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            font-family: 'Crimson Text', serif;
+            background: var(--blood-dark);
+            color: var(--pale-text);
             min-height: 100vh;
-            color: var(--text-primary);
-            line-height: 1.6;
+            position: relative;
             overflow-x: hidden;
+        }
+
+        /* Subtle fog effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" opacity="0.03" width="1" height="1" x="50" y="50"/></svg>');
+            pointer-events: none;
+            opacity: 0.5;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
+            position: relative;
         }
 
-        /* Header Design */
+        /* Header - FromSoft Title Style */
         .header {
             text-align: center;
             margin-bottom: 3rem;
-            position: relative;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 2px;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-iron);
         }
 
         h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px var(--glow-primary);
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--ember-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .subtitle {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            font-weight: 300;
-            margin-bottom: 2rem;
+            font-style: italic;
+            color: var(--faded-text);
+            font-size: 1.1rem;
+            letter-spacing: 0.1rem;
         }
 
         .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(124, 58, 237, 0.1);
-            border: 1px solid var(--accent-primary);
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--accent-primary);
+            display: inline-block;
             margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            color: var(--faded-text);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 300;
         }
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
+        /* Currency Bar - Souls Style */
+        .souls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
         }
 
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-primary);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px var(--glow-primary);
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-header {
+        .soul-counter {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .stat-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-        }
-
-        .stat-value {
-            font-size: 2.75rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1;
-            margin-bottom: 0.5rem;
             font-family: 'JetBrains Mono', monospace;
+        }
+
+        .soul-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .soul-value {
+            font-size: 1.25rem;
+            color: var(--pale-text);
+            font-weight: 400;
+        }
+
+        /* Stats Grid - Minimal Dark Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            padding: 1.5rem;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--ember-glow);
         }
 
         .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            color: var(--faded-text);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            color: var(--ember-glow);
+            font-weight: 300;
         }
 
         .stat-subtitle {
-            color: var(--text-muted);
-            font-size: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--faded-text);
             margin-top: 0.25rem;
+            font-style: italic;
         }
 
-        /* Currency Bar */
-        .currency-bar {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
-        }
-
-        .currency-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.25rem;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .currency-icon {
-            font-size: 1.5rem;
-        }
-
-        #xp-display {
-            color: var(--accent-primary);
-        }
-
-        #coins-display {
-            color: var(--accent-secondary);
-        }
-
-        /* Story Section */
-        .story-section {
-            margin-top: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-        }
-
-        .story-panels {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .story-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .story-panel.unlocked {
-            border-color: var(--accent-primary);
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), transparent);
-        }
-
-        .story-panel:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent-primary);
-        }
-
-        .story-progress {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .story-progress-bar {
-            flex: 1;
-            height: 0.5rem;
-            background: var(--bg-secondary);
-            border-radius: 0.25rem;
-            overflow: hidden;
-        }
-
-        .story-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            transition: width 0.5s;
-        }
-
-        .story-status {
-            color: var(--accent-primary);
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
-
-        /* Memory Fragment Styles */
-        .memory-fragment {
-            aspect-ratio: 1;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .memory-fragment.unlocked {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 15px var(--glow-primary);
-        }
-
-        .memory-fragment:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-primary);
-        }
-
-        .memory-locked {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-        }
-
-        .memory-number {
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .memory-cost {
-            color: var(--accent-secondary);
-            font-size: 0.65rem;
-        }
-
-        .memory-icon {
-            font-size: 1.5rem;
-        }
-
-        /* Notifications */
-        .notification {
-            position: fixed;
-            top: 2rem;
-            right: -400px;
-            max-width: 400px;
-            padding: 1rem 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transition: right 0.3s;
-            z-index: 1000;
-        }
-
-        .notification.show {
-            right: 2rem;
-        }
-
-        .notification-reward {
-            border-color: var(--accent-primary);
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), var(--bg-card));
-        }
-
-        .notification-error {
-            border-color: #EF4444;
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), var(--bg-card));
-        }
-
-        .notification-success {
-            border-color: var(--accent-success);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), var(--bg-card));
-        }
-
-        /* Achievement Notification */
-        .achievement-notification {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(200px);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.5rem 2rem;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1001;
-        }
-
-        .achievement-notification.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .achievement-icon {
-            font-size: 2rem;
-        }
-
-        .achievement-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .achievement-description {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        /* Progress Section */
-        .progress-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
+        /* Progress Section - Estus Flask Style */
+        .estus-progress {
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
             padding: 2rem;
             margin-bottom: 2rem;
         }
 
         .progress-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
         .progress-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            color: var(--pale-text);
         }
 
         .progress-bar {
-            background: var(--bg-secondary);
-            border-radius: 0.5rem;
-            height: 1rem;
-            overflow: hidden;
-            margin-bottom: 1rem;
+            height: 8px;
+            background: var(--blood-dark);
+            border: 1px solid var(--border-iron);
             position: relative;
+            overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 0.5rem;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            background: var(--ember-glow);
+            transition: width 1s ease;
+            box-shadow: 0 0 10px var(--ember-glow);
         }
 
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -45px;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shimmer 1.5s infinite;
+        .progress-message {
+            margin-top: 1rem;
+            color: var(--faded-text);
+            font-style: italic;
+            text-align: center;
         }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .progress-text {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Sprints Grid */
-        .sprints-grid {
+        /* Sprint Cards - Bonfire Style */
+        .bonfire-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        .sprint-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
+        .bonfire-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
             padding: 1.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            overflow: hidden;
         }
 
-        .sprint-card.completed {
-            border-color: var(--accent-success);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        .bonfire-card.lit {
+            border-color: var(--ember-glow);
+            box-shadow: inset 0 0 20px rgba(184, 134, 11, 0.1);
         }
 
-        .sprint-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent-primary);
-        }
-
-        .sprint-header {
+        .bonfire-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1rem;
         }
 
-        .sprint-title {
-            font-weight: 600;
-            color: var(--text-primary);
+        .bonfire-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--pale-text);
         }
 
-        .sprint-progress {
-            background: var(--bg-secondary);
-            border-radius: 0.25rem;
-            height: 0.5rem;
-            overflow: hidden;
-            margin-bottom: 0.75rem;
+        .bonfire-progress {
+            height: 4px;
+            background: var(--blood-dark);
+            margin-bottom: 0.5rem;
         }
 
-        .sprint-progress-fill {
+        .bonfire-flame {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 0.25rem;
-            transition: width 0.6s ease;
+            background: var(--ember-glow);
+            transition: width 0.6s;
         }
 
-        .sprint-stats {
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
-
-        /* Memory System */
-        .memory-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 1rem;
+        /* Memory Grid - Soul Fragment Style */
+        .memory-chamber {
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
             padding: 2rem;
             margin-bottom: 2rem;
         }
 
         .memory-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
         }
 
-        .memory-fragment {
+        .soul-fragment {
             aspect-ratio: 1;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 0.5rem;
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--faded-text);
         }
 
-        .memory-fragment.unlocked {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 15px var(--glow-primary);
+        .soul-fragment.obtained {
+            background: var(--ember-glow);
+            color: var(--blood-dark);
+            border-color: var(--ember-glow);
+            box-shadow: 0 0 10px rgba(184, 134, 11, 0.5);
         }
 
-        .memory-fragment:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-primary);
+        .soul-fragment:hover {
+            transform: scale(1.1);
+            border-color: var(--ember-glow);
         }
 
-        .memory-fragment.unlocked:hover {
-            box-shadow: 0 0 25px var(--glow-primary);
-        }
-
-        /* Audio Controls */
-        .audio-controls {
+        /* Audio Controls - Item Menu Style */
+        .item-menu {
             display: flex;
             gap: 1rem;
             margin-top: 1rem;
-            flex-wrap: wrap;
         }
 
-        .audio-btn {
+        .menu-item {
             padding: 0.75rem 1.5rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: 0.5rem;
-            color: var(--text-primary);
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            color: var(--pale-text);
+            font-family: 'Crimson Text', serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            background: var(--ash-black);
+            border-color: var(--ember-glow);
+        }
+
+        .menu-item.active {
+            background: var(--ember-glow);
+            color: var(--blood-dark);
+        }
+
+        /* Story Panels - Covenant Style */
+        .covenant-section {
+            margin-top: 2rem;
+        }
+
+        .covenant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .covenant-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            padding: 1.5rem;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: inherit;
         }
 
-        .audio-btn:hover {
-            background: var(--accent-primary);
-            border-color: var(--accent-primary);
-            transform: translateY(-1px);
+        .covenant-card.joined {
+            border-color: var(--soul-blue);
+            box-shadow: inset 0 0 20px rgba(65, 105, 225, 0.1);
         }
 
-        .audio-btn.active {
-            background: var(--accent-primary);
-            border-color: var(--accent-primary);
+        .covenant-card:hover {
+            border-color: var(--ember-glow);
         }
 
-        /* Side Quest Alert */
-        .side-quest-alert {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(245, 158, 11, 0.2));
-            border: 1px solid var(--accent-primary);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .side-quest-alert h3 {
-            color: var(--accent-secondary);
+        .covenant-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--pale-text);
             margin-bottom: 0.5rem;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .sprints-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .memory-grid {
-                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-                gap: 0.5rem;
-            }
+        .covenant-progress {
+            font-size: 0.9rem;
+            color: var(--faded-text);
         }
 
-        /* Loading State */
-        .loading {
-            opacity: 0.5;
-            pointer-events: none;
+        /* Modal - Dark Sign Style */
+        .dark-sign-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 8, 6, 0.95);
+            z-index: 1000;
         }
 
-        .error {
-            color: #EF4444;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #EF4444;
-            border-radius: 0.5rem;
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--stone-dark);
+            border: 2px solid var(--border-iron);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--ember-glow);
+            margin-bottom: 1rem;
+        }
+
+        .modal-text {
+            color: var(--pale-text);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: var(--blood-red);
+            color: var(--pale-text);
             padding: 1rem;
             margin: 1rem 0;
+            border: 1px solid darkred;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .bonfire-grid { grid-template-columns: 1fr; }
+            .memory-grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>🌳 Abstract Garden</h1>
-            <p class="subtitle">3D Animation Production - Gamified Learning Journey</p>
-            <div class="badge">
-                🎮 FromSoft-Style Progression • 🇬🇧 British VO • 💰 Real Portfolio Value
-            </div>
+            <h1>Abstract Garden</h1>
+            <p class="subtitle">The Souls of Digital Creation</p>
+            <div class="badge">BEARER OF THE RENDER • SEEK THE FORGOTTEN STORIES</div>
         </div>
 
-        <!-- Side Quest Alert -->
-        <div class="side-quest-alert">
-            <h3>🎭 Missing Side Quests Detected!</h3>
-            <p>18 additional side quest issues need to be created to unlock the hidden stories:<br>
-            <strong>The Forgotten Women</strong> • <strong>The Eastern Masters</strong> • <strong>The Open Source Heroes</strong></p>
-        </div>
-
-        <!-- XP and Coins Display -->
-        <div class="currency-bar">
-            <div class="currency-item">
-                <span class="currency-icon">⚡</span>
-                <span id="xp-display">0 XP</span>
+        <!-- Soul Counter -->
+        <div class="souls-bar">
+            <div class="soul-counter">
+                <span class="soul-icon">✦</span>
+                <span class="soul-value" id="xp-display">0 SOULS</span>
             </div>
-            <div class="currency-item">
-                <span class="currency-icon">🪙</span>
-                <span id="coins-display">0 Coins</span>
+            <div class="soul-counter">
+                <span class="soul-icon">◈</span>
+                <span class="soul-value" id="coins-display">0 EMBERS</span>
             </div>
         </div>
 
         <!-- Main Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">💰</div>
-                    <div>
-                        <div class="stat-label">Portfolio Value</div>
-                        <div class="stat-subtitle">Real Market Value</div>
-                    </div>
-                </div>
+                <div class="stat-label">Portfolio Worth</div>
                 <div class="stat-value" id="portfolio-value">$0</div>
-                <div class="stat-subtitle">Based on CGTrader pricing research</div>
+                <div class="stat-subtitle">The weight of thy creations</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">📈</div>
-                    <div>
-                        <div class="stat-label">Monthly Income</div>
-                        <div class="stat-subtitle">Passive Potential</div>
-                    </div>
-                </div>
+                <div class="stat-label">Monthly Tithe</div>
                 <div class="stat-value" id="monthly-income">$0</div>
-                <div class="stat-subtitle">20% monthly sales rate projection</div>
+                <div class="stat-subtitle">Passive souls gathered</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">⚡</div>
-                    <div>
-                        <div class="stat-label">Level</div>
-                        <div class="stat-subtitle" id="level-title">Beginner</div>
-                    </div>
-                </div>
-                <div class="stat-value" id="level">0</div>
-                <div class="stat-subtitle">FromSoft-style XP progression</div>
+                <div class="stat-label">Soul Level</div>
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-subtitle" id="level-title">Hollow</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">🎯</div>
-                    <div>
-                        <div class="stat-label">Tasks Complete</div>
-                        <div class="stat-subtitle">Main Quest Progress</div>
-                    </div>
-                </div>
-                <div class="stat-value" id="tasks-complete">0/67</div>
-                <div class="stat-subtitle">49 main + 18 side quests</div>
+                <div class="stat-label">Tasks Vanquished</div>
+                <div class="stat-value" id="tasks-complete">0/78</div>
+                <div class="stat-subtitle">Issues laid to rest</div>
             </div>
         </div>
 
-        <!-- Progress Section -->
-        <div class="progress-section">
+        <!-- Progress Bar -->
+        <div class="estus-progress">
             <div class="progress-header">
-                <h2 class="progress-title">📊 Learning Progress</h2>
+                <div class="progress-title">Journey Progress</div>
                 <div id="progress-percentage">0%</div>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="main-progress" style="width: 0%"></div>
             </div>
-            <div class="progress-text" id="progress-message">
-                Start your journey by completing your first task!
+            <div class="progress-message" id="progress-message">
+                Thou art yet to begin thy journey, Hollow one...
             </div>
         </div>
 
-        <!-- Sprints Grid -->
-        <div class="sprints-grid">
-            <div class="sprint-card" id="sprint-1">
-                <div class="sprint-header">
-                    <div class="sprint-title">🚀 Sprint 1: Foundation</div>
+        <!-- Sprint Bonfires -->
+        <div class="bonfire-grid">
+            <div class="bonfire-card" id="sprint-1">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">First Flame</div>
                     <div>0%</div>
                 </div>
-                <div class="sprint-progress">
-                    <div class="sprint-progress-fill" style="width: 0%"></div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
                 </div>
-                <div class="sprint-stats">
-                    <span>Installation & First Touch</span>
-                    <span>8 tasks</span>
-                </div>
+                <div class="stat-subtitle">Foundation • 8 trials</div>
             </div>
             
-            <div class="sprint-card" id="sprint-2">
-                <div class="sprint-header">
-                    <div class="sprint-title">⚡ Sprint 2: Core Skills</div>
+            <div class="bonfire-card" id="sprint-2">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Kiln of Skills</div>
                     <div>0%</div>
                 </div>
-                <div class="sprint-progress">
-                    <div class="sprint-progress-fill" style="width: 0%"></div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
                 </div>
-                <div class="sprint-stats">
-                    <span>Modeling & Animation</span>
-                    <span>28 tasks</span>
-                </div>
+                <div class="stat-subtitle">Core mastery • 28 trials</div>
             </div>
             
-            <div class="sprint-card" id="sprint-3">
-                <div class="sprint-header">
-                    <div class="sprint-title">🔥 Sprint 3: Mastery</div>
+            <div class="bonfire-card" id="sprint-3">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Throne of Want</div>
                     <div>0%</div>
                 </div>
-                <div class="sprint-progress">
-                    <div class="sprint-progress-fill" style="width: 0%"></div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
                 </div>
-                <div class="sprint-stats">
-                    <span>Advanced Integration</span>
-                    <span>21 tasks</span>
-                </div>
+                <div class="stat-subtitle">Advanced arts • 20 trials</div>
             </div>
             
-            <div class="sprint-card" id="side-quests">
-                <div class="sprint-header">
-                    <div class="sprint-title">🎭 Side Quests</div>
+            <div class="bonfire-card" id="side-quests">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Hidden Paths</div>
                     <div>0%</div>
                 </div>
-                <div class="sprint-progress">
-                    <div class="sprint-progress-fill" style="width: 0%"></div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
                 </div>
-                <div class="sprint-stats">
-                    <span>Hidden Stories</span>
-                    <span>18 quests</span>
-                </div>
+                <div class="stat-subtitle">Side quests • 0 found</div>
             </div>
         </div>
 
-        <!-- Memory System -->
-        <div class="memory-section">
+        <!-- Memory Chamber -->
+        <div class="memory-chamber">
             <div class="progress-header">
-                <h2 class="progress-title">🧠 Memory Fragments</h2>
-                <div>
-                    <span id="memories-unlocked">0</span>/49 stories discovered
-                </div>
+                <div class="progress-title">Memory Fragments</div>
+                <div><span id="memories-unlocked">0</span>/49 recovered</div>
             </div>
             <div class="memory-grid" id="memory-grid">
-                <!-- Memory fragments will be generated by JavaScript -->
+                <!-- Generated by JS -->
             </div>
-            <div class="audio-controls">
-                <button class="audio-btn" id="vo-toggle">🎙️ British VO: OFF</button>
-                <button class="audio-btn" id="music-toggle">🎵 Ambient Music: OFF</button>
-                <button class="audio-btn" id="story-mode">📖 Story Mode</button>
-            </div>
-        </div>
-
-        <!-- Story Panels -->
-        <div class="story-section">
-            <h2 class="section-title">📖 Hidden Stories</h2>
-            <div id="story-panels" class="story-panels">
-                <!-- Story panels will be generated by JavaScript -->
+            <div class="item-menu">
+                <button class="menu-item" id="vo-toggle">Voice: Silent</button>
+                <button class="menu-item" id="music-toggle">Ambience: Silent</button>
+                <button class="menu-item" id="story-mode">Read Chronicles</button>
             </div>
         </div>
 
+        <!-- Covenant Stories -->
+        <div class="covenant-section">
+            <div class="progress-title" style="margin-bottom: 1rem;">Hidden Covenants</div>
+            <div class="covenant-grid" id="covenant-grid">
+                <div class="covenant-card">
+                    <div class="covenant-name">The Forgotten Women</div>
+                    <div class="covenant-progress">Requires completion of hidden trials</div>
+                </div>
+                <div class="covenant-card">
+                    <div class="covenant-name">The Eastern Masters</div>
+                    <div class="covenant-progress">Seek the forgotten algorithms</div>
+                </div>
+                <div class="covenant-card">
+                    <div class="covenant-name">The Open Source Heroes</div>
+                    <div class="covenant-progress">Liberation through shared knowledge</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Story Modal -->
-    <div id="story-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border-radius: 1rem; padding: 2rem; max-width: 600px; width: 90%;">
-            <h3 id="story-title"></h3>
-            <p id="story-content"></p>
-            <div style="margin-top: 1rem;">
-                <button class="audio-btn" onclick="document.getElementById('story-modal').style.display='none'">Close</button>
+    <!-- Dark Sign Modal -->
+    <div class="dark-sign-modal" id="story-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="story-title">Memory Fragment</div>
+            <div class="modal-text" id="story-content">
+                The echoes of forgotten knowledge whisper through the digital void...
             </div>
+            <button class="menu-item" onclick="document.getElementById('story-modal').style.display='none'">
+                Return to the Waking World
+            </button>
         </div>
     </div>
 
-    <script type="module" src="js/game-state.js"></script>
-    <script type="module" src="js/dashboard-integration.js"></script>
-    
     <script>
+        // Global state
         let issues = [];
+        let completedTasks = 0; // Fix: Define at global scope
+        let totalTasks = 0;
         
         async function loadData() {
             try {
@@ -874,28 +610,26 @@
                 generateMemoryGrid();
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.body.innerHTML += `<div class="error">Failed to load data: ${error.message}</div>`;
+                document.body.innerHTML += `<div class="error-message">Failed to commune with the GitHub spirits: ${error.message}</div>`;
             }
         }
 
         function updateDashboard() {
             if (!issues.length) return;
 
-            // Filter real tasks (exclude dashboard and PRs)
-            const realIssues = issues.filter(issue => 
-                !issue.pull_request && 
-                issue.number !== 78 && // dashboard issue
-                issue.number >= 22 // real tasks start at 22
-            );
-
+            // Get all real issues (78 total)
+            const realIssues = issues.filter(issue => !issue.pull_request);
             const closedIssues = realIssues.filter(issue => issue.state === 'closed');
-            const completedTasks = closedIssues.length;
-            const totalTasks = realIssues.length;
+            
+            completedTasks = closedIssues.length;
+            totalTasks = realIssues.length;
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-            // Calculate portfolio value (more sophisticated calculation)
+            // Calculate values
             const portfolioValue = calculatePortfolioValue(completedTasks);
             const monthlyIncome = Math.round(portfolioValue * 0.2);
+            const xp = completedTasks * 100;
+            const level = calculateLevel(xp);
             
             // Update DOM
             document.getElementById('portfolio-value').textContent = `$${portfolioValue.toLocaleString()}`;
@@ -903,117 +637,124 @@
             document.getElementById('tasks-complete').textContent = `${completedTasks}/${totalTasks}`;
             document.getElementById('progress-percentage').textContent = `${progress}%`;
             document.getElementById('main-progress').style.width = `${progress}%`;
-            
-            // Calculate level (FromSoft style)
-            const xp = completedTasks * 100;
-            const level = Math.floor(Math.sqrt(xp / 100)) + 1;
-            const levelTitles = ['Beginner', 'Apprentice', 'Journeyman', 'Expert', 'Master', 'Legend'];
-            
             document.getElementById('level').textContent = level;
-            document.getElementById('level-title').textContent = levelTitles[Math.min(level - 1, 5)];
+            document.getElementById('level-title').textContent = getSoulTitle(level);
+            document.getElementById('xp-display').textContent = `${xp} SOULS`;
+            document.getElementById('coins-display').textContent = `${completedTasks * 75} EMBERS`;
             
             // Update progress message
             const messages = [
-                "Start your journey by completing your first task!",
-                "First steps taken. The path reveals itself...",
-                "Progress grows. Ancient knowledge awakens...",
-                "The machine spirits take notice of your dedication...",
-                "Halfway through your trials. Power flows through your work...",
-                "Mastery approaches. The digital realm bends to your will...",
-                "You have achieved Digital Ascension. The cycle completes..."
+                "Thou art yet to begin thy journey, Hollow one...",
+                "The First Flame flickers. Thy path begins to reveal itself...",
+                "Souls gathered. The ancient knowledge stirs within thee...",
+                "The machine spirits acknowledge thy dedication, Bearer of the Render...",
+                "Halfway through thy trials. The digital realm bends to thy will...",
+                "Mastery approaches. Soon thou shalt transcend mortality...",
+                "Near the throne. The cycle nears completion...",
+                "Thou hast linked the Fire. The Age of Dark is forestalled..."
             ];
             
-            const messageIndex = Math.min(Math.floor(progress / 15), messages.length - 1);
+            const messageIndex = Math.min(Math.floor(progress / 12.5), messages.length - 1);
             document.getElementById('progress-message').textContent = messages[messageIndex];
             
             updateSprintProgress(closedIssues);
         }
 
-        function calculatePortfolioValue(completedTasks) {
-            // Sophisticated value calculation based on task types
-            const baseValue = completedTasks * 150; // Base $150 per task
-            const levelBonus = Math.floor(completedTasks / 10) * 500; // Bonus every 10 tasks
-            const masterworkBonus = completedTasks >= 49 ? 10000 : 0; // Masterwork bonus
+        function calculatePortfolioValue(completed) {
+            const baseValue = completed * 150;
+            const levelBonus = Math.floor(completed / 10) * 500;
+            const masterworkBonus = completed >= 78 ? 15000 : 0;
             return baseValue + levelBonus + masterworkBonus;
         }
 
-        function updateSprintProgress(closedIssues) {
-            // Sprint 1: Issues 70-77
-            const sprint1Completed = closedIssues.filter(i => i.number >= 70 && i.number <= 77).length;
-            updateSprint('sprint-1', sprint1Completed, 8);
-            
-            // Sprint 2: Issues 42-69 (main curriculum part 1)
-            const sprint2Completed = closedIssues.filter(i => i.number >= 42 && i.number <= 69).length;
-            updateSprint('sprint-2', sprint2Completed, 28);
-            
-            // Sprint 3: Issues 22-41 (main curriculum part 2)
-            const sprint3Completed = closedIssues.filter(i => i.number >= 22 && i.number <= 41).length;
-            updateSprint('sprint-3', sprint3Completed, 20);
-            
-            // Side quests (to be added)
-            updateSprint('side-quests', 0, 18);
+        function calculateLevel(xp) {
+            return Math.floor(Math.sqrt(xp / 100)) + 1;
         }
 
-        function updateSprint(id, completed, total) {
+        function getSoulTitle(level) {
+            const titles = [
+                'Hollow', 'Unkindled', 'Bearer of the Curse', 'Ashen One',
+                'Seeker of Fire', 'Keeper of Embers', 'Digital Wanderer',
+                'Code Weaver', 'Render Knight', 'Shader Sorcerer',
+                'Lord of Cinder', 'Transcendent'
+            ];
+            return titles[Math.min(level - 1, titles.length - 1)];
+        }
+
+        function updateSprintProgress(closedIssues) {
+            // Count by issue ranges - adjust based on your actual issue numbering
+            let sprint1Count = 0, sprint2Count = 0, sprint3Count = 0;
+            
+            closedIssues.forEach(issue => {
+                if (issue.number >= 70 && issue.number <= 77) sprint1Count++;
+                else if (issue.number >= 42 && issue.number <= 69) sprint2Count++;
+                else if (issue.number >= 22 && issue.number <= 41) sprint3Count++;
+            });
+            
+            updateBonfire('sprint-1', sprint1Count, 8);
+            updateBonfire('sprint-2', sprint2Count, 28);
+            updateBonfire('sprint-3', sprint3Count, 20);
+            updateBonfire('side-quests', 0, 18); // Side quests not created yet
+        }
+
+        function updateBonfire(id, completed, total) {
             const element = document.getElementById(id);
             const percent = Math.round((completed / total) * 100);
-            const percentElement = element.querySelector('.sprint-header > div:nth-child(2)');
-            const progressBar = element.querySelector('.sprint-progress-fill');
-            
-            percentElement.textContent = `${percent}%`;
-            progressBar.style.width = `${percent}%`;
+            element.querySelector('.bonfire-header > div:nth-child(2)').textContent = `${percent}%`;
+            element.querySelector('.bonfire-flame').style.width = `${percent}%`;
             
             if (percent === 100) {
-                element.classList.add('completed');
+                element.classList.add('lit');
             }
         }
 
         function generateMemoryGrid() {
             const grid = document.getElementById('memory-grid');
-            const totalMemories = 49;
+            grid.innerHTML = '';
             
-            for (let i = 1; i <= totalMemories; i++) {
+            for (let i = 1; i <= 49; i++) {
                 const fragment = document.createElement('div');
-                fragment.className = 'memory-fragment';
+                fragment.className = 'soul-fragment';
                 fragment.dataset.memoryId = i;
                 fragment.textContent = i;
                 
-                // Unlock memories based on completed tasks
-                const completedTasks = issues.filter(issue => 
-                    !issue.pull_request && 
-                    issue.number !== 78 && 
-                    issue.number >= 22 && 
-                    issue.state === 'closed'
-                ).length;
-                
                 if (i <= completedTasks) {
-                    fragment.classList.add('unlocked');
+                    fragment.classList.add('obtained');
                     fragment.addEventListener('click', () => showMemory(i));
                 }
                 
                 grid.appendChild(fragment);
             }
             
-            document.getElementById('memories-unlocked').textContent = Math.min(completedTasks, totalMemories);
+            document.getElementById('memories-unlocked').textContent = Math.min(completedTasks, 49);
         }
 
-        function showMemory(memoryId) {
-            // This will be enhanced by the story system
+        function showMemory(id) {
             const modal = document.getElementById('story-modal');
-            const title = document.getElementById('story-title');
-            const content = document.getElementById('story-content');
-            
-            title.textContent = `Memory Fragment ${memoryId}`;
-            content.textContent = `Story fragment ${memoryId} unlocked! This contains a piece of computer graphics history...`;
-            
+            document.getElementById('story-title').textContent = `Memory Fragment ${id}`;
+            document.getElementById('story-content').textContent = 
+                `The echoes of creation whisper: Fragment ${id} reveals the ancient knowledge of the digital realm...`;
             modal.style.display = 'block';
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', loadData);
-        
-        // Auto-refresh every 5 minutes
-        setInterval(loadData, 5 * 60 * 1000);
+        // Audio toggles
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadData, 5 * 60 * 1000);
+            
+            // Audio controls
+            document.getElementById('vo-toggle').addEventListener('click', function() {
+                this.classList.toggle('active');
+                this.textContent = this.classList.contains('active') ? 'Voice: British Lady' : 'Voice: Silent';
+            });
+            
+            document.getElementById('music-toggle').addEventListener('click', function() {
+                this.classList.toggle('active');
+                this.textContent = this.classList.contains('active') ? 'Ambience: Active' : 'Ambience: Silent';
+            });
+        });
     </script>
 </body>
 </html>
