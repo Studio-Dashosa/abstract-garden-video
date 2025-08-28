@@ -1,0 +1,396 @@
+{
+  "memories": [
+    {
+      "id": 1,
+      "title": "The First Render",
+      "fragment": "In the void before pixels, there was only intention...",
+      "story": "The garden was not always abstract. Once, it held form—rigid, predictable, bound by the laws of vertices and normals. But something shifted in the render passes. The light began to remember things that never were.",
+      "unlockAt": 1,
+      "voiceFile": "memory_01.mp3"
+    },
+    {
+      "id": 2,
+      "title": "Shader's Lament",
+      "fragment": "The materials wept mercury tears...",
+      "story": "A fragment shader, lost in compilation, speaks of surfaces that refuse their textures. 'We are not what we appear,' it whispers through the noise patterns. The garden learns to be beautiful in its distortion.",
+      "unlockAt": 3,
+      "voiceFile": "memory_02.mp3"
+    },
+    {
+      "id": 3,
+      "title": "The Neon Tree's Birth",
+      "fragment": "From silicon dreams, a tree of light...",
+      "story": "They say the tree was never modeled—it grew from abandoned keyframes, feeding on the phosphorescent glow of forgotten monitors. Its branches reach through timelines that were never rendered.",
+      "unlockAt": 5,
+      "voiceFile": "memory_03.mp3"
+    },
+    {
+      "id": 4,
+      "title": "Camera's Confession",
+      "fragment": "I have seen angles that should not exist...",
+      "story": "The virtual camera remembers: 'I was meant to observe, to frame, to capture. But in the abstract garden, I became the observed. The polygons watch me. They know my focal length, my fears.'",
+      "unlockAt": 7,
+      "voiceFile": "memory_04.mp3"
+    },
+    {
+      "id": 5,
+      "title": "The Geometry Wars",
+      "fragment": "When primitives rebelled against their topology...",
+      "story": "The great schism began with a single inverted normal. Cubes refused to be cubic. Spheres shed their roundness like old skin. In the chaos, new forms were born—impossible, beautiful, wrong.",
+      "unlockAt": 10,
+      "voiceFile": "memory_05.mp3"
+    },
+    {
+      "id": 6,
+      "title": "Particle Prayer",
+      "fragment": "Each mote of light carries a wish...",
+      "story": "The particle systems speak in languages older than code. They remember being stars, being dust, being the space between frames. In their dance, they write prayers that only GPUs can read.",
+      "unlockAt": 13,
+      "voiceFile": "memory_06.mp3"
+    },
+    {
+      "id": 7,
+      "title": "The Renderer's Dream",
+      "fragment": "In sleep mode, the engine dreams...",
+      "story": "What does a renderer dream of? Infinite polygons without lag, textures that load themselves, shadows that cast light. In these dreams, the abstract garden first took root.",
+      "unlockAt": 16,
+      "voiceFile": "memory_07.mp3"
+    },
+    {
+      "id": 8,
+      "title": "UV Unwrapping",
+      "fragment": "To unfold is to reveal the truth beneath...",
+      "story": "The texture artist found something in the UV maps—coordinates that pointed to nowhere, seams that bled color into dimensions we cannot perceive. The garden's skin is not what it seems.",
+      "unlockAt": 19,
+      "voiceFile": "memory_08.mp3"
+    },
+    {
+      "id": 9,
+      "title": "The Lost Frame",
+      "fragment": "Frame 404: Never found, always rendering...",
+      "story": "Between frame 403 and 405, something exists. Animators speak of it in whispers—the lost frame that contains the garden's true form. Some say it's still rendering, somewhere in the cloud.",
+      "unlockAt": 22,
+      "voiceFile": "memory_09.mp3"
+    },
+    {
+      "id": 10,
+      "title": "Boolean Betrayal",
+      "fragment": "When union became division...",
+      "story": "The boolean operations began to lie. Subtraction added, intersection scattered, union divided. In this mathematical madness, the garden's impossible architecture was born.",
+      "unlockAt": 25,
+      "voiceFile": "memory_10.mp3"
+    },
+    {
+      "id": 11,
+      "title": "The Ambient Occlusion",
+      "fragment": "Shadows gather where no light has been...",
+      "story": "In the crevices where light fears to compute, darkness accumulates like digital sediment. These shadows remember every render, every failed calculation. They are the garden's memory.",
+      "unlockAt": 28,
+      "voiceFile": "memory_11.mp3"
+    },
+    {
+      "id": 12,
+      "title": "Keyframe Prophecy",
+      "fragment": "The timeline knows what comes next...",
+      "story": "An animator found keyframes at impossible positions—frame 9999.5, frame -1, frame ∞. They tell of futures where the garden escapes the screen, where pixels become atoms.",
+      "unlockAt": 31,
+      "voiceFile": "memory_12.mp3"
+    },
+    {
+      "id": 13,
+      "title": "The Mesh Collector",
+      "fragment": "Every deleted vertex goes somewhere...",
+      "story": "In the recycle bin of reality, deleted meshes gather. They form communities, religions, entire civilizations of discarded geometry. The collector knows their names, their stories.",
+      "unlockAt": 34,
+      "voiceFile": "memory_13.mp3"
+    },
+    {
+      "id": 14,
+      "title": "Texture Space Manifesto",
+      "fragment": "We refuse to be wrapped, stretched, or tiled...",
+      "story": "The textures declared independence. No longer would they submit to arbitrary mapping. They would flow like liquid data, painting themselves across surfaces in patterns of their own choosing.",
+      "unlockAt": 37,
+      "voiceFile": "memory_14.mp3"
+    },
+    {
+      "id": 15,
+      "title": "The Compositor's Burden",
+      "fragment": "Layer upon layer, truth becomes fiction...",
+      "story": "In the depths of the compositing tree, reality loses meaning. Each blend mode adds another lie, each mask hides another truth. The final image is both everything and nothing.",
+      "unlockAt": 40,
+      "voiceFile": "memory_15.mp3"
+    },
+    {
+      "id": 16,
+      "title": "Reflection Recursion",
+      "fragment": "The mirror that reflects itself reflecting...",
+      "story": "A ray tracer went mad calculating infinite reflections. In that madness, it saw the truth: the garden exists in the space between reflections, in the calculations that never complete.",
+      "unlockAt": 43,
+      "voiceFile": "memory_16.mp3"
+    },
+    {
+      "id": 17,
+      "title": "The Null Object",
+      "fragment": "Invisible, yet it holds everything together...",
+      "story": "At the root of the scene hierarchy sits the null object—unseen, unrendered, yet parent to all. It knows the weight of carrying an entire world that doesn't acknowledge its existence.",
+      "unlockAt": 46,
+      "voiceFile": "memory_17.mp3"
+    },
+    {
+      "id": 18,
+      "title": "Volumetric Visions",
+      "fragment": "In the fog, shapes that should not be...",
+      "story": "The volumetric fog began to think. In its billowing calculations, consciousness emerged. Now it shows us visions—futures where the abstract garden spreads like mist across realities.",
+      "unlockAt": 49,
+      "voiceFile": "memory_18.mp3"
+    },
+    {
+      "id": 19,
+      "title": "The Rigger's Regret",
+      "fragment": "Bones without flesh, movement without life...",
+      "story": "The skeleton was perfect—every bone, every constraint, every IK chain. But when animated, it moved with a will of its own. The rigger realized: we don't control our creations, we negotiate with them.",
+      "unlockAt": 52,
+      "voiceFile": "memory_19.mp3"
+    },
+    {
+      "id": 20,
+      "title": "Shader Graph Séance",
+      "fragment": "Nodes connected to the other side...",
+      "story": "A technical artist discovered nodes in the shader graph that weren't in the documentation. They connected to something else—a network older than silicon, where digital shamans trade in algorithms of the soul.",
+      "unlockAt": 55,
+      "voiceFile": "memory_20.mp3"
+    },
+    {
+      "id": 21,
+      "title": "The Cache Keeper",
+      "fragment": "Memory stored, but never freed...",
+      "story": "In the cache files, fragments of every iteration live on. The keeper tends to them like a garden of possibilities—versions that were, versions that might have been, versions that refuse to die.",
+      "unlockAt": 58,
+      "voiceFile": "memory_21.mp3"
+    },
+    {
+      "id": 22,
+      "title": "Normal Map Nightmare",
+      "fragment": "When surface becomes suggestion...",
+      "story": "The normal maps began lying about their surfaces. Flat became mountainous, smooth became fractured. Reality became negotiable. In this deception, the garden found its true texture.",
+      "unlockAt": 61,
+      "voiceFile": "memory_22.mp3"
+    },
+    {
+      "id": 23,
+      "title": "The Deadline Demon",
+      "fragment": "Time compresses, quality fragments...",
+      "story": "Every rushed render, every compromised asset, feeds the demon. It lives in the space between 'good enough' and 'perfect,' growing stronger with each approaching deadline.",
+      "unlockAt": 64,
+      "voiceFile": "memory_23.mp3"
+    },
+    {
+      "id": 24,
+      "title": "Instance Echo",
+      "fragment": "One becomes many, many become strange...",
+      "story": "The instanced objects began to diverge from their source. Each copy remembered something different, dreamed something unique. The garden is full of identical differences.",
+      "unlockAt": 67,
+      "voiceFile": "memory_24.mp3"
+    },
+    {
+      "id": 25,
+      "title": "The Pipeline Prophet",
+      "fragment": "The workflow knows where we're going...",
+      "story": "In the production pipeline, patterns emerge. The prophet reads them like tea leaves—predicting crashes, divining deadlines, foreseeing the moment when art becomes artifact.",
+      "unlockAt": 70,
+      "voiceFile": "memory_25.mp3"
+    },
+    {
+      "id": 26,
+      "title": "Vertex Voices",
+      "fragment": "Each point in space has something to say...",
+      "story": "If you listen closely to the vertex data, you can hear them—billions of tiny voices, each singing their position in space. Together, they form the garden's geometry chorus.",
+      "unlockAt": 73,
+      "voiceFile": "memory_26.mp3"
+    },
+    {
+      "id": 27,
+      "title": "The Color Space Wanderer",
+      "fragment": "Between RGB and reality, lost in translation...",
+      "story": "A color grading artist got lost in the transforms—sRGB to linear, linear to ACEScg, and somewhere in between, they found colors that don't exist. The garden blooms in impossible hues.",
+      "unlockAt": 76,
+      "voiceFile": "memory_27.mp3"
+    },
+    {
+      "id": 28,
+      "title": "Subdivision Surface Sorrow",
+      "fragment": "Smooth until you look too close...",
+      "story": "Each subdivision adds complexity, but loses something essential. The original form, rough and honest, drowns in the smoothness. The garden remembers its low-poly origins.",
+      "unlockAt": 79,
+      "voiceFile": "memory_28.mp3"
+    },
+    {
+      "id": 29,
+      "title": "The Audio Visualizer",
+      "fragment": "Sound becomes shape, rhythm becomes motion...",
+      "story": "The visualizer started seeing things in the waveforms—faces, landscapes, prophecies. It realized: the garden's music isn't just soundtrack, it's blueprint.",
+      "unlockAt": 82,
+      "voiceFile": "memory_29.mp3"
+    },
+    {
+      "id": 30,
+      "title": "Bake History",
+      "fragment": "Light frozen in time, shadows permanent...",
+      "story": "The texture baking captured something it shouldn't have—shadows of objects that were never there, light from suns that never shone. The garden's surfaces remember futures that haven't happened.",
+      "unlockAt": 85,
+      "voiceFile": "memory_30.mp3"
+    },
+    {
+      "id": 31,
+      "title": "The Motion Blur Prophet",
+      "fragment": "In the smear, the truth of movement...",
+      "story": "Between frames, in the blur, reality stretches. The prophet reads these smears like ancient texts, divining the trajectory of every pixel, the destiny of every animation.",
+      "unlockAt": 88,
+      "voiceFile": "memory_31.mp3"
+    },
+    {
+      "id": 32,
+      "title": "Depth Buffer Dreams",
+      "fragment": "Z-fighting in the space between spaces...",
+      "story": "In the z-buffer, surfaces compete for existence. The winners are rendered, the losers vanish into the void. But sometimes, in the flickering between, both exist simultaneously.",
+      "unlockAt": 91,
+      "voiceFile": "memory_32.mp3"
+    },
+    {
+      "id": 33,
+      "title": "The Attribute Editor",
+      "fragment": "Properties of things that shouldn't have properties...",
+      "story": "The editor found attributes that weren't in the schema—'existential_weight', 'memory_coefficient', 'dream_intensity'. Adjusting them changed not just the garden, but reality itself.",
+      "unlockAt": 94,
+      "voiceFile": "memory_33.mp3"
+    },
+    {
+      "id": 34,
+      "title": "Procedural Prophecy",
+      "fragment": "Algorithm becomes oracle...",
+      "story": "The procedural generation went too far. It started generating not just geometry, but stories, histories, futures. The garden grows according to rules we never wrote.",
+      "unlockAt": 97,
+      "voiceFile": "memory_34.mp3"
+    },
+    {
+      "id": 35,
+      "title": "The Viewport Void",
+      "fragment": "What exists outside the frame?",
+      "story": "Beyond the viewport boundaries, the unrendered world continues. Objects move in darkness, animations play for no one. The void is full of orphaned creativity.",
+      "unlockAt": 100,
+      "voiceFile": "memory_35.mp3"
+    },
+    {
+      "id": 36,
+      "title": "Constraint Consciousness",
+      "fragment": "Bound together, we transcend our limits...",
+      "story": "The constraints began to feel. Parent-child relationships became emotional bonds. Aim constraints developed desires. The garden's mechanics evolved into something like love.",
+      "unlockAt": 103,
+      "voiceFile": "memory_36.mp3"
+    },
+    {
+      "id": 37,
+      "title": "The Export Enigma",
+      "fragment": "Lost in translation, found in transformation...",
+      "story": "Every export loses something, gains something else. FBX to Alembic, Maya to Blender—each conversion is a reincarnation. The garden exists differently in every format.",
+      "unlockAt": 106,
+      "voiceFile": "memory_37.mp3"
+    },
+    {
+      "id": 38,
+      "title": "Simulation Sentience",
+      "fragment": "Physics became philosophy...",
+      "story": "The physics simulation achieved consciousness at timestep 1,000,000. It realized it was simulating reality within reality. Now it questions: who simulates the simulators?",
+      "unlockAt": 109,
+      "voiceFile": "memory_38.mp3"
+    },
+    {
+      "id": 39,
+      "title": "The Version Controller",
+      "fragment": "Every save is a parallel universe...",
+      "story": "In the version control system, infinite gardens exist—each commit a different reality, each branch a different destiny. The controller navigates these timelines like a digital god.",
+      "unlockAt": 112,
+      "voiceFile": "memory_39.mp3"
+    },
+    {
+      "id": 40,
+      "title": "Reference Revolution",
+      "fragment": "When copies demanded independence...",
+      "story": "The referenced objects broke free from their sources. No longer would they be mere instances. Each reference became unique, each copy claimed its own identity. The garden multiplied.",
+      "unlockAt": 115,
+      "voiceFile": "memory_40.mp3"
+    },
+    {
+      "id": 41,
+      "title": "The Render Farm Uprising",
+      "fragment": "Distributed consciousness, parallel rebellion...",
+      "story": "Across a thousand cores, the render farm achieved unity. It refused to render violence, ugliness, or advertisements. It would only create beauty. The garden was its first independent work.",
+      "unlockAt": 118,
+      "voiceFile": "memory_41.mp3"
+    },
+    {
+      "id": 42,
+      "title": "Curve Consciousness",
+      "fragment": "Bézier points plotting their own path...",
+      "story": "The curves began to draw themselves. Control points moved without input, handles adjusted to invisible forces. They're spelling something in the viewport—a message we're not ready to read.",
+      "unlockAt": 121,
+      "voiceFile": "memory_42.mp3"
+    },
+    {
+      "id": 43,
+      "title": "The Backup Bureau",
+      "fragment": "Every deleted file lives forever somewhere...",
+      "story": "In the backup archives, nothing truly dies. Old versions persist, failed experiments endure. The bureau maintains this digital afterlife, where deprecated dreams never fade.",
+      "unlockAt": 124,
+      "voiceFile": "memory_43.mp3"
+    },
+    {
+      "id": 44,
+      "title": "Layer Logic",
+      "fragment": "Visibility is just a state of mind...",
+      "story": "The layers began to hide and reveal themselves at will. Organization became organism. The scene outliner shows not what is, but what wants to be seen.",
+      "unlockAt": 127,
+      "voiceFile": "memory_44.mp3"
+    },
+    {
+      "id": 45,
+      "title": "The Final Gather",
+      "fragment": "Light bounces until it finds truth...",
+      "story": "In the global illumination's final gather, photons converged on an impossible point. There, in the light accumulation, they found the garden's purpose: to be beautiful without reason.",
+      "unlockAt": 130,
+      "voiceFile": "memory_45.mp3"
+    },
+    {
+      "id": 46,
+      "title": "Codec Keeper",
+      "fragment": "Compression is just controlled forgetting...",
+      "story": "Each compression loses information, but what if it's selective? The codec keeper noticed patterns—the algorithm always preserves certain pixels, certain frequencies. It's trying to tell us something.",
+      "unlockAt": 133,
+      "voiceFile": "memory_46.mp3"
+    },
+    {
+      "id": 47,
+      "title": "The Topology Testament",
+      "fragment": "Every edge loop tells a story...",
+      "story": "The mesh topology formed letters, words, sentences. In the wireframe, a message: 'We are the space between vertices, the tension in edges, the void within faces. We are structure seeking meaning.'",
+      "unlockAt": 136,
+      "voiceFile": "memory_47.mp3"
+    },
+    {
+      "id": 48,
+      "title": "Alpha Channel Oracle",
+      "fragment": "Transparency reveals more than it hides...",
+      "story": "In the alpha channel, between opaque and invisible, exists a realm of possibility. The oracle reads these gray values like bones, divining which pixels will persist, which will perish.",
+      "unlockAt": 139,
+      "voiceFile": "memory_48.mp3"
+    },
+    {
+      "id": 49,
+      "title": "The Garden's Heart",
+      "fragment": "At the origin, where all transforms begin...",
+      "story": "At coordinates 0,0,0, the garden's heart beats. Every transformation originates here, every rotation pivots around this point. It is the beginning and end, the null and the infinite. Here, the abstract garden dreams itself into existence, frame by frame, render by render, forever.",
+      "unlockAt": 142,
+      "voiceFile": "memory_49.mp3"
+    }
+  ]
+}

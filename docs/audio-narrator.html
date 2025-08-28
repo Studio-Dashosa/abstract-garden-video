@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Garden's Voice - Memory Fragment Narrator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1f 100%);
+            color: #e0d4f7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #d4af37;
+            opacity: 0;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(100vh) scale(0);
+            }
+            10% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 0.6;
+                transform: translateY(-50vh) translateX(100px) scale(1);
+            }
+            90% {
+                opacity: 0.2;
+            }
+        }
+
+        .narrator-container {
+            background: rgba(10, 10, 20, 0.95);
+            border: 1px solid #d4af37;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 
+                0 0 50px rgba(212, 175, 55, 0.2),
+                inset 0 0 30px rgba(138, 43, 226, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #d4af37, #e0d4f7, #d4af37);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0%; }
+            50% { background-position: 100%; }
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a090b0;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        .memory-display {
+            background: rgba(30, 20, 40, 0.6);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .memory-display::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #d4af37, transparent, #8a2be2, transparent, #d4af37);
+            border-radius: 15px;
+            opacity: 0;
+            animation: glow 4s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.5; }
+        }
+
+        .memory-title {
+            color: #d4af37;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        .memory-fragment {
+            color: #a090b0;
+            font-style: italic;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeIn 1s 0.5s forwards;
+        }
+
+        .memory-story {
+            color: #e0d4f7;
+            line-height: 1.8;
+            opacity: 0;
+            animation: fadeIn 1s 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, #2a1a3a, #1a0f2f);
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #3a2a4a, #2a1f3f);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.playing {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.8); }
+        }
+
+        .voice-select {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .voice-option {
+            padding: 0.8rem 1.5rem;
+            background: rgba(30, 20, 40, 0.8);
+            border: 1px solid #554466;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .voice-option:hover {
+            border-color: #d4af37;
+            background: rgba(40, 30, 50, 0.9);
+        }
+
+        .voice-option.active {
+            background: linear-gradient(135deg, #3a2a4a, #2a1f3f);
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+
+        .audio-visualizer {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            margin: 2rem 0;
+        }
+
+        .bar {
+            width: 4px;
+            background: linear-gradient(to top, #d4af37, #8a2be2);
+            transition: height 0.1s;
+            border-radius: 2px;
+        }
+
+        .ambient-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 10, 20, 0.95);
+            border: 1px solid #d4af37;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .ambient-control:hover {
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+            transform: scale(1.1);
+        }
+
+        .ambient-control.playing::after {
+            content: '♪';
+            animation: musicNote 2s infinite;
+        }
+
+        @keyframes musicNote {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-10px) rotate(10deg); opacity: 0.7; }
+        }
+
+        #memoryProgress {
+            background: rgba(30, 20, 40, 0.6);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: rgba(10, 10, 20, 0.8);
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #8a2be2);
+            border-radius: 20px;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="narrator-container">
+        <h1>The Garden's Voice</h1>
+        <p class="subtitle">Memory Fragments of the Abstract Garden</p>
+
+        <div class="voice-select">
+            <div class="voice-option active" data-voice="en-GB-witchy">British Witch</div>
+            <div class="voice-option" data-voice="en-GB-noble">British Noble</div>
+            <div class="voice-option" data-voice="en-GB-mystic">Mystic Oracle</div>
+            <div class="voice-option" data-voice="en-US-whisper">Ethereal Whisper</div>
+        </div>
+
+        <div class="memory-display" id="memoryDisplay">
+            <div class="memory-title" id="memoryTitle">Select a memory to begin...</div>
+            <div class="memory-fragment" id="memoryFragment"></div>
+            <div class="memory-story" id="memoryStory"></div>
+        </div>
+
+        <div class="audio-visualizer" id="visualizer">
+            <div class="bar" style="height: 20px;"></div>
+            <div class="bar" style="height: 35px;"></div>
+            <div class="bar" style="height: 25px;"></div>
+            <div class="bar" style="height: 40px;"></div>
+            <div class="bar" style="height: 30px;"></div>
+            <div class="bar" style="height: 45px;"></div>
+            <div class="bar" style="height: 35px;"></div>
+            <div class="bar" style="height: 50px;"></div>
+            <div class="bar" style="height: 40px;"></div>
+            <div class="bar" style="height: 35px;"></div>
+            <div class="bar" style="height: 25px;"></div>
+            <div class="bar" style="height: 30px;"></div>
+        </div>
+
+        <div class="controls" id="memoryButtons">
+            <!-- Buttons will be generated here -->
+        </div>
+
+        <div id="memoryProgress">
+            <div>Memories Discovered: <span id="discoveredCount">0</span> / 49</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ambient-control" id="ambientControl" title="Toggle Ambient Music">
+        🎵
+    </div>
+
+    <script>
+        // British witch voice configuration
+        const voiceConfigs = {
+            'en-GB-witchy': {
+                lang: 'en-GB',
+                pitch: 0.9,
+                rate: 0.85,
+                voicePattern: /female|woman|emma|amy|gb/i
+            },
+            'en-GB-noble': {
+                lang: 'en-GB',
+                pitch: 1.0,
+                rate: 0.9,
+                voicePattern: /female|woman|victoria|gb/i
+            },
+            'en-GB-mystic': {
+                lang: 'en-GB',
+                pitch: 0.8,
+                rate: 0.8,
+                voicePattern: /female|oracle|gb/i
+            },
+            'en-US-whisper': {
+                lang: 'en-US',
+                pitch: 0.7,
+                rate: 0.75,
+                voicePattern: /female|whisper|aria/i
+            }
+        };
+
+        let currentVoice = 'en-GB-witchy';
+        let speechSynth = window.speechSynthesis;
+        let currentUtterance = null;
+        let memories = [];
+        let discoveredMemories = new Set();
+        let ambientAudio = null;
+
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Load memories
+        async function loadMemories() {
+            try {
+                const response = await fetch('memories.json');
+                const data = await response.json();
+                memories = data.memories;
+                generateMemoryButtons();
+                checkUnlockedMemories();
+            } catch (error) {
+                console.error('Failed to load memories:', error);
+                // Fallback to inline memories
+                memories = [
+                    {
+                        id: 1,
+                        title: "The First Render",
+                        fragment: "In the void before pixels, there was only intention...",
+                        story: "The garden was not always abstract. Once, it held form—rigid, predictable, bound by the laws of vertices and normals. But something shifted in the render passes.",
+                        unlockAt: 1
+                    }
+                ];
+                generateMemoryButtons();
+            }
+        }
+
+        // Generate memory buttons
+        function generateMemoryButtons() {
+            const container = document.getElementById('memoryButtons');
+            container.innerHTML = '';
+            
+            memories.forEach(memory => {
+                const button = document.createElement('button');
+                button.textContent = `Memory ${memory.id}`;
+                button.dataset.memoryId = memory.id;
+                button.onclick = () => playMemory(memory);
+                
+                if (discoveredMemories.has(memory.id)) {
+                    button.style.borderColor = '#8a2be2';
+                    button.style.color = '#e0d4f7';
+                }
+                
+                container.appendChild(button);
+            });
+        }
+
+        // Check GitHub issues to unlock memories
+        async function checkUnlockedMemories() {
+            try {
+                const response = await fetch('data/issues.json');
+                const issues = await response.json();
+                const closedCount = issues.filter(i => i.state === 'closed').length;
+                
+                memories.forEach(memory => {
+                    if (closedCount >= memory.unlockAt) {
+                        discoveredMemories.add(memory.id);
+                    }
+                });
+                
+                updateProgress();
+                generateMemoryButtons();
+            } catch (error) {
+                console.error('Failed to check unlocked memories:', error);
+            }
+        }
+
+        // Play memory narration
+        function playMemory(memory) {
+            // Stop current speech
+            if (currentUtterance) {
+                speechSynth.cancel();
+            }
+
+            // Update display
+            document.getElementById('memoryTitle').textContent = memory.title;
+            document.getElementById('memoryFragment').textContent = memory.fragment;
+            document.getElementById('memoryStory').textContent = memory.story;
+
+            // Mark as discovered
+            if (!discoveredMemories.has(memory.id)) {
+                discoveredMemories.add(memory.id);
+                updateProgress();
+                generateMemoryButtons();
+            }
+
+            // Create speech
+            const text = `${memory.title}. ${memory.fragment} ${memory.story}`;
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            
+            // Apply voice settings
+            const config = voiceConfigs[currentVoice];
+            currentUtterance.lang = config.lang;
+            currentUtterance.pitch = config.pitch;
+            currentUtterance.rate = config.rate;
+
+            // Try to find matching voice
+            const voices = speechSynth.getVoices();
+            const matchingVoice = voices.find(v => 
+                v.lang.includes(config.lang.split('-')[0]) && 
+                config.voicePattern.test(v.name)
+            );
+            
+            if (matchingVoice) {
+                currentUtterance.voice = matchingVoice;
+            }
+
+            // Visual feedback
+            const button = document.querySelector(`[data-memory-id="${memory.id}"]`);
+            if (button) {
+                button.classList.add('playing');
+            }
+
+            // Animate visualizer
+            animateVisualizer(true);
+
+            currentUtterance.onend = () => {
+                if (button) {
+                    button.classList.remove('playing');
+                }
+                animateVisualizer(false);
+            };
+
+            speechSynth.speak(currentUtterance);
+        }
+
+        // Animate audio visualizer
+        function animateVisualizer(playing) {
+            const bars = document.querySelectorAll('.bar');
+            
+            if (playing) {
+                const animate = () => {
+                    bars.forEach(bar => {
+                        const height = 20 + Math.random() * 40;
+                        bar.style.height = height + 'px';
+                    });
+                    
+                    if (speechSynth.speaking) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        bars.forEach(bar => bar.style.height = '20px');
+                    }
+                };
+                animate();
+            } else {
+                bars.forEach(bar => bar.style.height = '20px');
+            }
+        }
+
+        // Update progress display
+        function updateProgress() {
+            const count = discoveredMemories.size;
+            const percentage = Math.round((count / 49) * 100);
+            
+            document.getElementById('discoveredCount').textContent = count;
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressFill').textContent = percentage + '%';
+        }
+
+        // Voice selection
+        document.querySelectorAll('.voice-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelector('.voice-option.active').classList.remove('active');
+                option.classList.add('active');
+                currentVoice = option.dataset.voice;
+            });
+        });
+
+        // Ambient music control
+        document.getElementById('ambientControl').addEventListener('click', function() {
+            if (!ambientAudio) {
+                // Create ambient audio context
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(110, audioContext.currentTime); // Low drone
+                gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.start();
+                
+                this.classList.add('playing');
+                ambientAudio = { oscillator, gainNode, audioContext };
+            } else {
+                ambientAudio.oscillator.stop();
+                ambientAudio = null;
+                this.classList.remove('playing');
+            }
+        });
+
+        // Initialize
+        createParticles();
+        loadMemories();
+        
+        // Load voices
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('Voices loaded:', speechSynthesis.getVoices().length);
+            };
+        }
+
+        // Auto-check for new unlocked memories
+        setInterval(checkUnlockedMemories, 30000);
+    </script>
+</body>
+</html>
