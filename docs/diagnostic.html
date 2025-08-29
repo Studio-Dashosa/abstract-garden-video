@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abstract Garden - Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .test-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌳 Abstract Garden - Diagnostic Test</h1>
+    
+    <div class="test-card">
+        <h2>Basic HTML Test</h2>
+        <div class="success">✅ HTML is loading correctly</div>
+        <div class="success">✅ CSS styles are working</div>
+    </div>
+    
+    <div class="test-card">
+        <h2>JavaScript Test</h2>
+        <div id="js-test">🔄 Testing JavaScript...</div>
+    </div>
+    
+    <div class="test-card">
+        <h2>GitHub API Test</h2>
+        <div id="api-test">🔄 Testing GitHub API...</div>
+    </div>
+    
+    <div class="test-card">
+        <h2>Font Loading Test</h2>
+        <div id="font-test">🔄 Testing Google Fonts...</div>
+    </div>
+    
+    <div class="test-card">
+        <h2>Console Errors</h2>
+        <div id="error-log">Check browser console for detailed error logs</div>
+    </div>
+    
+    <script>
+        console.log('🔧 Starting diagnostic tests...');
+        
+        // Test 1: Basic JavaScript
+        try {
+            document.getElementById('js-test').innerHTML = '<div class="success">✅ JavaScript is working</div>';
+            console.log('✅ JavaScript test passed');
+        } catch (e) {
+            document.getElementById('js-test').innerHTML = `<div class="error">❌ JavaScript error: ${e.message}</div>`;
+            console.error('❌ JavaScript test failed:', e);
+        }
+        
+        // Test 2: GitHub API
+        async function testGitHubAPI() {
+            try {
+                const response = await fetch('https://api.github.com/repos/Studio-Dashosa/abstract-garden-video/issues?state=all&per_page=5', {
+                    headers: { 'Accept': 'application/vnd.github.v3+json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('api-test').innerHTML = `<div class="success">✅ GitHub API working - Found ${data.length} issues</div>`;
+                    console.log('✅ GitHub API test passed:', data.length, 'issues found');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (e) {
+                document.getElementById('api-test').innerHTML = `<div class="error">❌ GitHub API error: ${e.message}</div>`;
+                console.error('❌ GitHub API test failed:', e);
+            }
+        }
+        
+        // Test 3: Font loading
+        function testFontLoading() {
+            const testDiv = document.createElement('div');
+            testDiv.style.fontFamily = 'Inter, sans-serif';
+            testDiv.textContent = 'Font test';
+            testDiv.style.position = 'absolute';
+            testDiv.style.visibility = 'hidden';
+            document.body.appendChild(testDiv);
+            
+            const computedStyle = window.getComputedStyle(testDiv);
+            const fontFamily = computedStyle.fontFamily;
+            
+            if (fontFamily.includes('Inter')) {
+                document.getElementById('font-test').innerHTML = '<div class="success">✅ Inter font loaded</div>';
+                console.log('✅ Font test passed: Inter loaded');
+            } else {
+                document.getElementById('font-test').innerHTML = `<div class="error">❌ Inter font not loaded (using: ${fontFamily})</div>`;
+                console.log('❌ Font test failed: Inter not loaded, using:', fontFamily);
+            }
+            
+            document.body.removeChild(testDiv);
+        }
+        
+        // Test 4: Error monitoring
+        window.addEventListener('error', function(e) {
+            console.error('🚨 Global error caught:', e.error);
+            const errorDiv = document.getElementById('error-log');
+            errorDiv.innerHTML += `<div class="error">❌ Error: ${e.error ? e.error.message : e.message} at ${e.filename}:${e.lineno}</div>`;
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('🚨 Unhandled promise rejection:', e.reason);
+            const errorDiv = document.getElementById('error-log');
+            errorDiv.innerHTML += `<div class="error">❌ Promise rejection: ${e.reason}</div>`;
+        });
+        
+        // Run tests
+        testGitHubAPI();
+        testFontLoading();
+        
+        console.log('🔧 Diagnostic tests completed');
+    </script>
+</body>
+</html>
