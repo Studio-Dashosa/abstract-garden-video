@@ -1,4 +1,4 @@
-// Audio System with REAL Audio Files and Opening Narration
+// Enhanced Audio System with Better British Voice Support
 class AudioSystem {
     constructor() {
         this.voEnabled = false;
@@ -8,26 +8,16 @@ class AudioSystem {
         this.storyAudio = null;
         this.voiceAudio = null;
         this.isInitialized = false;
-        this.hasPlayedOpening = false;  // Track if opening has played
+        this.hasPlayedOpening = false;
+        this.voicesLoaded = false;
+        this.selectedVoice = null;
         
         // Voice options for British narrator
         this.voiceOptions = {
             'british-witch': {
                 pitch: 0.85,
                 rate: 0.75,
-                volume: 0.9,
-                voice: 'Google UK English Female'
-            },
-            'british-noble': {
-                pitch: 1.0,
-                rate: 0.8,
-                volume: 0.9,
-                voice: 'Google UK English Male'
-            },
-            'british-mystic': {
-                pitch: 0.75,
-                rate: 0.7,
-                volume: 0.85,
+                volume: 1.0,
                 voice: 'Google UK English Female'
             }
         };
@@ -35,10 +25,10 @@ class AudioSystem {
         this.init();
     }
     
-    init() {
+    async init() {
         // Create ambient audio element with REAL file
         this.ambientAudio = new Audio('audio/ambient music for dashboard.mp3');
-        this.ambientAudio.loop = true;  // Music loops
+        this.ambientAudio.loop = true;
         this.ambientAudio.volume = 0.3;
         
         // Create story music element with REAL file
@@ -50,14 +40,131 @@ class AudioSystem {
         this.ambientAudio.load();
         this.storyAudio.load();
         
+        // Load voices
+        await this.loadVoices();
+        
         console.log('Audio System initialized with real audio files');
         this.isInitialized = true;
+    }
+    
+    async loadVoices() {
+        return new Promise((resolve) => {
+            // Check if speech synthesis is available
+            if (!('speechSynthesis' in window)) {
+                console.warn('Speech synthesis not supported in this browser');
+                resolve();
+                return;
+            }
+            
+            // Function to get and select best voice
+            const selectBestVoice = () => {
+                const voices = speechSynthesis.getVoices();
+                console.log(`Found ${voices.length} voices`);
+                
+                if (voices.length === 0) {
+                    return null;
+                }
+                
+                // Priority list of British voices
+                const voicePriority = [
+                    // Windows voices
+                    'Microsoft Hazel Online (Natural) - English (United Kingdom)',
+                    'Microsoft Hazel - English (United Kingdom)',
+                    'Microsoft Susan - English (United Kingdom)',
+                    'Microsoft George - English (United Kingdom)',
+                    
+                    // Google voices
+                    'Google UK English Female',
+                    'Google UK English Male',
+                    
+                    // Mac voices
+                    'Fiona',
+                    'Kate',
+                    'Stephanie',
+                    'Daniel',
+                    
+                    // Generic British
+                    'en-GB',
+                    'en_GB'
+                ];
+                
+                // Try to find voice by exact name
+                for (const name of voicePriority) {
+                    const voice = voices.find(v => v.name === name);
+                    if (voice) {
+                        console.log(`Selected voice by name: ${voice.name}`);
+                        return voice;
+                    }
+                }
+                
+                // Try to find any British female voice
+                const britishFemale = voices.find(v => 
+                    v.lang.includes('en-GB') && 
+                    (v.name.toLowerCase().includes('female') || 
+                     v.name.toLowerCase().includes('woman') ||
+                     v.name.toLowerCase().includes('hazel') ||
+                     v.name.toLowerCase().includes('kate'))
+                );
+                if (britishFemale) {
+                    console.log(`Selected British female: ${britishFemale.name}`);
+                    return britishFemale;
+                }
+                
+                // Try any British voice
+                const anyBritish = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB'));
+                if (anyBritish) {
+                    console.log(`Selected any British: ${anyBritish.name}`);
+                    return anyBritish;
+                }
+                
+                // Fallback to any English voice
+                const anyEnglish = voices.find(v => v.lang.startsWith('en'));
+                if (anyEnglish) {
+                    console.log(`Fallback to English: ${anyEnglish.name}`);
+                    return anyEnglish;
+                }
+                
+                // Use first available voice
+                console.log(`Using first available: ${voices[0].name}`);
+                return voices[0];
+            };
+            
+            // Try to get voices immediately
+            let voices = speechSynthesis.getVoices();
+            
+            if (voices.length > 0) {
+                this.selectedVoice = selectBestVoice();
+                this.voicesLoaded = true;
+                resolve();
+            } else {
+                // Wait for voices to load
+                console.log('Waiting for voices to load...');
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    this.selectedVoice = selectBestVoice();
+                    this.voicesLoaded = true;
+                    resolve();
+                }, { once: true });
+                
+                // Trigger voice loading
+                speechSynthesis.getVoices();
+                
+                // Timeout fallback
+                setTimeout(() => {
+                    if (!this.voicesLoaded) {
+                        console.warn('Voice loading timeout');
+                        resolve();
+                    }
+                }, 3000);
+            }
+        });
     }
     
     async playOpeningNarration() {
         // Only play once per session
         if (this.hasPlayedOpening) return;
         this.hasPlayedOpening = true;
+        
+        console.log('Starting opening narration...');
         
         const narrationText = `Long before the first pixel stirred in the phosphor dark...
         
@@ -98,53 +205,61 @@ class AudioSystem {
         
         Begin.`;
         
-        // Try to use Web Speech API with British voice
-        if ('speechSynthesis' in window) {
-            // Wait for voices to load
-            let voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                await new Promise(resolve => {
-                    speechSynthesis.addEventListener('voiceschanged', () => {
-                        voices = speechSynthesis.getVoices();
-                        resolve();
-                    }, { once: true });
-                });
+        // Check if we can use speech synthesis
+        if (!('speechSynthesis' in window)) {
+            console.error('Speech synthesis not supported');
+            this.showNarrationSubtitles(narrationText);
+            return;
+        }
+        
+        // Make sure voices are loaded
+        if (!this.voicesLoaded) {
+            await this.loadVoices();
+        }
+        
+        // Cancel any existing speech
+        speechSynthesis.cancel();
+        
+        // Create utterance
+        const utterance = new SpeechSynthesisUtterance(narrationText);
+        
+        // Set voice if we found one
+        if (this.selectedVoice) {
+            utterance.voice = this.selectedVoice;
+            console.log(`Using voice for narration: ${this.selectedVoice.name}`);
+        } else {
+            console.warn('No voice selected, using default');
+        }
+        
+        // Set voice parameters for dramatic effect
+        utterance.pitch = 0.85;  // Slightly lower pitch
+        utterance.rate = 0.75;   // Slower for drama
+        utterance.volume = 1.0;  // Full volume
+        
+        // Add event listeners
+        utterance.onstart = () => {
+            console.log('Narration started');
+            this.showNarrationSubtitles(narrationText);
+        };
+        
+        utterance.onend = () => {
+            console.log('Narration ended');
+            if (this.musicEnabled) {
+                this.startAmbientMusic();
             }
-            
-            const utterance = new SpeechSynthesisUtterance(narrationText);
-            
-            // Find the best British voice
-            const britishVoices = voices.filter(voice => voice.lang.startsWith('en-GB'));
-            const femaleVoice = britishVoices.find(voice => 
-                voice.name.toLowerCase().includes('female') || 
-                voice.name.toLowerCase().includes('woman')
-            );
-            const bestVoice = femaleVoice || britishVoices[0] || voices.find(v => v.lang.startsWith('en'));
-            
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-                console.log(`Using voice: ${bestVoice.name}`);
-            }
-            
-            // FromSoft dramatic settings
-            utterance.pitch = 0.85;
-            utterance.rate = 0.75;  // Slow and deliberate
-            utterance.volume = 0.9;
-            
-            // Add fade-in effect to UI
-            const container = document.querySelector('.container');
-            if (container) {
-                container.style.opacity = '0';
-                container.style.transition = 'opacity 3s';
-                setTimeout(() => {
-                    container.style.opacity = '1';
-                }, 100);
-            }
-            
-            // Play the narration
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('Speech error:', event);
+            this.showNarrationSubtitles(narrationText);
+        };
+        
+        // Speak!
+        try {
             speechSynthesis.speak(utterance);
-            
-            // Show subtitle/text overlay
+            console.log('Speech synthesis started');
+        } catch (error) {
+            console.error('Failed to start speech:', error);
             this.showNarrationSubtitles(narrationText);
         }
     }
@@ -166,6 +281,7 @@ class AudioSystem {
             z-index: 9999;
             opacity: 0;
             transition: opacity 2s;
+            cursor: pointer;
         `;
         
         const textContainer = document.createElement('div');
@@ -180,21 +296,32 @@ class AudioSystem {
             font-style: italic;
         `;
         
+        const skipHint = document.createElement('div');
+        skipHint.style.cssText = `
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            color: #8B8378;
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+        `;
+        skipHint.textContent = 'Click to skip';
+        
         // Split text into paragraphs for dramatic reveal
         const paragraphs = text.split('\n\n');
         let currentParagraph = 0;
+        let timeoutId;
         
         const showNextParagraph = () => {
             if (currentParagraph < paragraphs.length) {
                 textContainer.textContent = paragraphs[currentParagraph];
                 currentParagraph++;
-                setTimeout(showNextParagraph, 3500); // Show each paragraph for 3.5 seconds
+                timeoutId = setTimeout(showNextParagraph, 3500);
             } else {
                 // Fade out and remove overlay
                 overlay.style.opacity = '0';
                 setTimeout(() => {
                     overlay.remove();
-                    // Start ambient music after narration
                     if (this.musicEnabled) {
                         this.startAmbientMusic();
                     }
@@ -202,7 +329,19 @@ class AudioSystem {
             }
         };
         
+        // Allow clicking to skip
+        overlay.addEventListener('click', () => {
+            clearTimeout(timeoutId);
+            speechSynthesis.cancel();
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 500);
+            if (this.musicEnabled) {
+                this.startAmbientMusic();
+            }
+        });
+        
         overlay.appendChild(textContainer);
+        overlay.appendChild(skipHint);
         document.body.appendChild(overlay);
         
         // Fade in
@@ -228,49 +367,29 @@ class AudioSystem {
             }
         }
         
-        // Check if we have a pre-recorded VO file
-        const voFile = `audio/vo/memory_${memoryId}.mp3`;
-        
-        try {
-            // Try to load pre-recorded audio
-            const response = await fetch(voFile);
-            if (response.ok) {
-                this.voiceAudio = new Audio(voFile);
-                this.voiceAudio.volume = 0.8;
-                await this.voiceAudio.play();
-                return;
-            }
-        } catch (e) {
-            // Fall back to speech synthesis
+        // Make sure voices are loaded
+        if (!this.voicesLoaded) {
+            await this.loadVoices();
         }
         
-        // Fallback to Web Speech API with British accent
         if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+            
             const utterance = new SpeechSynthesisUtterance(memoryText);
-            const voices = speechSynthesis.getVoices();
             
-            // Find British voice
-            const britishVoice = voices.find(voice => 
-                voice.lang === 'en-GB' && voice.name.includes('Female')
-            ) || voices.find(voice => voice.lang === 'en-GB');
-            
-            if (britishVoice) {
-                utterance.voice = britishVoice;
+            if (this.selectedVoice) {
+                utterance.voice = this.selectedVoice;
             }
             
-            const voiceConfig = this.voiceOptions[this.currentVoice];
-            utterance.pitch = voiceConfig.pitch;
-            utterance.rate = voiceConfig.rate;
-            utterance.volume = voiceConfig.volume;
+            utterance.pitch = 0.85;
+            utterance.rate = 0.75;
+            utterance.volume = 1.0;
             
-            // Add dramatic pauses for FromSoft style
-            const dramaticText = memoryText
-                .replace(/\./g, '...')
-                .replace(/,/g, ',,')
-                .replace(/:/g, ':::');
-            
-            utterance.text = dramaticText;
-            speechSynthesis.speak(utterance);
+            try {
+                speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Failed to speak memory:', error);
+            }
         }
     }
     
@@ -294,13 +413,11 @@ class AudioSystem {
         if (!this.musicEnabled || !this.ambientAudio) return;
         
         try {
-            // Use the REAL ambient music file
             await this.ambientAudio.play();
             this.fadeIn(this.ambientAudio, 0.3, 2000);
             console.log('Playing real ambient music');
         } catch (e) {
             console.log('Ambient music playback failed:', e);
-            // User needs to interact with page first
         }
     }
     
@@ -340,13 +457,18 @@ class AudioSystem {
         }, 50);
     }
     
-    toggleVO() {
+    async toggleVO() {
         this.voEnabled = !this.voEnabled;
         if (!this.voEnabled) {
             this.stopNarration();
         } else if (!this.hasPlayedOpening) {
+            // Make sure voices are loaded before playing
+            if (!this.voicesLoaded) {
+                console.log('Loading voices before narration...');
+                await this.loadVoices();
+            }
             // Play opening narration when VO is first enabled
-            this.playOpeningNarration();
+            await this.playOpeningNarration();
         }
         return this.voEnabled;
     }
@@ -366,23 +488,17 @@ class AudioSystem {
         return this.musicEnabled;
     }
     
-    setVoice(voiceType) {
-        if (this.voiceOptions[voiceType]) {
-            this.currentVoice = voiceType;
-        }
-    }
-    
     // Play sound effects - FromSoft style
     playSound(soundType) {
         const sounds = {
-            'soul-collected': 440,  // A4 note - soul collection
-            'level-up': 880,        // A5 note - level up fanfare
-            'memory-unlock': 660,    // E5 note - memory revealed
-            'quest-complete': 550,   // C#5 note - quest completion
-            'bonfire-lit': 330,      // E4 note - bonfire activation
-            'covenant-joined': 392,  // G4 note - covenant joined
-            'item-acquired': 494,    // B4 note - item obtained
-            'bell-toll': 220        // A3 note - deep bell for opening
+            'soul-collected': 440,
+            'level-up': 880,
+            'memory-unlock': 660,
+            'quest-complete': 550,
+            'bonfire-lit': 330,
+            'covenant-joined': 392,
+            'item-acquired': 494,
+            'bell-toll': 220
         };
         
         if (sounds[soundType]) {
@@ -391,7 +507,6 @@ class AudioSystem {
     }
     
     playTone(frequency, duration) {
-        // Use Web Audio API for simple tones
         if (!window.AudioContext && !window.webkitAudioContext) return;
         
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -404,7 +519,6 @@ class AudioSystem {
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
         
-        // Envelope for more pleasant sound
         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
         gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
