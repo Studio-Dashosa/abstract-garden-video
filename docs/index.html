@@ -410,6 +410,13 @@
             text-align: center;
         }
 
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 1rem;
+            color: var(--faded-text);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             h1 { font-size: 2rem; }
@@ -428,8 +435,11 @@
             <div class="badge">BEARER OF THE RENDER • SEEK THE FORGOTTEN STORIES</div>
         </div>
 
+        <!-- Loading indicator -->
+        <div id="loading" class="loading">Communing with the GitHub spirits...</div>
+
         <!-- Soul Counter -->
-        <div class="souls-bar">
+        <div class="souls-bar" style="display: none;" id="souls-bar">
             <div class="soul-counter">
                 <span class="soul-icon">✦</span>
                 <span class="soul-value" id="xp-display">0 SOULS</span>
@@ -441,7 +451,7 @@
         </div>
 
         <!-- Main Stats -->
-        <div class="stats-grid">
+        <div class="stats-grid" id="stats-grid" style="display: none;">
             <div class="stat-card">
                 <div class="stat-label">Portfolio Worth</div>
                 <div class="stat-value" id="portfolio-value">$0</div>
@@ -468,7 +478,7 @@
         </div>
 
         <!-- Progress Bar -->
-        <div class="estus-progress">
+        <div class="estus-progress" id="progress-section" style="display: none;">
             <div class="progress-header">
                 <div class="progress-title">Journey Progress</div>
                 <div id="progress-percentage">0%</div>
@@ -482,7 +492,7 @@
         </div>
 
         <!-- Sprint Bonfires -->
-        <div class="bonfire-grid">
+        <div class="bonfire-grid" id="bonfire-grid" style="display: none;">
             <div class="bonfire-card" id="sprint-1">
                 <div class="bonfire-header">
                     <div class="bonfire-title">First Flame</div>
@@ -519,17 +529,17 @@
             <div class="bonfire-card" id="side-quests">
                 <div class="bonfire-header">
                     <div class="bonfire-title">Hidden Paths</div>
-                    <div>0%</div>
+                    <div id="side-quest-percent">0%</div>
                 </div>
                 <div class="bonfire-progress">
-                    <div class="bonfire-flame" style="width: 0%"></div>
+                    <div class="bonfire-flame" id="side-quest-flame" style="width: 0%"></div>
                 </div>
-                <div class="stat-subtitle">Side quests • 0 found</div>
+                <div class="stat-subtitle" id="side-quest-subtitle">Side quests • 0/18 found</div>
             </div>
         </div>
 
         <!-- Memory Chamber -->
-        <div class="memory-chamber">
+        <div class="memory-chamber" id="memory-chamber" style="display: none;">
             <div class="progress-header">
                 <div class="progress-title">Memory Fragments</div>
                 <div><span id="memories-unlocked">0</span>/49 recovered</div>
@@ -545,20 +555,20 @@
         </div>
 
         <!-- Covenant Stories -->
-        <div class="covenant-section">
+        <div class="covenant-section" id="covenant-section" style="display: none;">
             <div class="progress-title" style="margin-bottom: 1rem;">Hidden Covenants</div>
             <div class="covenant-grid" id="covenant-grid">
-                <div class="covenant-card">
+                <div class="covenant-card" id="covenant-women">
                     <div class="covenant-name">The Forgotten Women</div>
-                    <div class="covenant-progress">Requires completion of hidden trials</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
                 </div>
-                <div class="covenant-card">
+                <div class="covenant-card" id="covenant-eastern">
                     <div class="covenant-name">The Eastern Masters</div>
-                    <div class="covenant-progress">Seek the forgotten algorithms</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
                 </div>
-                <div class="covenant-card">
+                <div class="covenant-card" id="covenant-opensource">
                     <div class="covenant-name">The Open Source Heroes</div>
-                    <div class="covenant-progress">Liberation through shared knowledge</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
                 </div>
             </div>
         </div>
@@ -571,24 +581,47 @@
             <div class="modal-text" id="story-content">
                 The echoes of forgotten knowledge whisper through the digital void...
             </div>
-            <button class="menu-item" onclick="document.getElementById('story-modal').style.display='none'">
+            <button class="menu-item" onclick="closeModal()">
                 Return to the Waking World
             </button>
         </div>
     </div>
 
-    <!-- Load game modules -->
+    <!-- Scripts load in correct order -->
     <script src="js/memory-fragments.js"></script>
     <script src="js/audio-system.js"></script>
-    <script type="module" src="js/game-state.js"></script>
-    <script type="module" src="js/dashboard-integration.js"></script>
-    <script type="module" src="js/story-system.js"></script>
     
     <script>
         // Global state
         let issues = [];
-        let completedTasks = 0; // Fix: Define at global scope
-        let totalTasks = 0;
+        let completedTasks = 0;
+        let totalTasks = 96; // 78 main + 18 side quests
+        let mainTasks = 78;
+        let sideQuests = 18;
+        let audioSystem = null;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Initializing Abstract Garden dashboard...');
+            
+            // Initialize audio system
+            try {
+                audioSystem = new AudioSystem();
+                window.audioSystem = audioSystem;
+                console.log('Audio system initialized');
+            } catch (e) {
+                console.error('Failed to init audio:', e);
+            }
+            
+            // Load data
+            loadData();
+            
+            // Set up event handlers
+            setupEventHandlers();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadData, 5 * 60 * 1000);
+        });
         
         async function loadData() {
             try {
@@ -599,37 +632,66 @@
                     const local = await fetch('./data/issues.json', { cache: 'no-store' });
                     if (local.ok) {
                         issues = await local.json();
+                        console.log(`Loaded ${issues.length} issues from local cache`);
                     } else {
                         throw new Error('No local data');
                     }
                 } catch (_) {
                     // Fallback to GitHub API
-                    const issuesResponse = await fetch(`https://api.github.com/repos/${repo}/issues?state=all&per_page=100`, {
-                        headers: { 'Accept': 'application/vnd.github.v3+json' }
-                    });
+                    console.log('Fetching from GitHub API...');
+                    const issuesResponse = await fetch(
+                        `https://api.github.com/repos/${repo}/issues?state=all&per_page=100`,
+                        { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+                    );
+                    
                     if (!issuesResponse.ok) {
                         throw new Error(`GitHub API Error: ${issuesResponse.status}`);
                     }
                     issues = await issuesResponse.json();
+                    console.log(`Loaded ${issues.length} issues from GitHub`);
                 }
 
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('souls-bar').style.display = 'flex';
+                document.getElementById('stats-grid').style.display = 'grid';
+                document.getElementById('progress-section').style.display = 'block';
+                document.getElementById('bonfire-grid').style.display = 'grid';
+                document.getElementById('memory-chamber').style.display = 'block';
+                document.getElementById('covenant-section').style.display = 'block';
+                
                 updateDashboard();
                 generateMemoryGrid();
+                
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.body.innerHTML += `<div class="error-message">Failed to commune with the GitHub spirits: ${error.message}</div>`;
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error-message">Failed to commune with the GitHub spirits: ${error.message}</div>`;
             }
         }
 
         function updateDashboard() {
             if (!issues.length) return;
 
-            // Get all real issues (78 total)
+            // Filter real issues (no pull requests)
             const realIssues = issues.filter(issue => !issue.pull_request);
             const closedIssues = realIssues.filter(issue => issue.state === 'closed');
             
+            // Count side quests (issues with 'side-quest' label)
+            const sideQuestIssues = realIssues.filter(issue => 
+                issue.labels && issue.labels.some(label => label.name === 'side-quest')
+            );
+            const completedSideQuests = sideQuestIssues.filter(issue => issue.state === 'closed');
+            
+            // Calculate totals
+            const mainIssues = realIssues.filter(issue => 
+                !issue.labels || !issue.labels.some(label => label.name === 'side-quest')
+            );
+            const completedMainTasks = mainIssues.filter(issue => issue.state === 'closed').length;
+            
             completedTasks = closedIssues.length;
             totalTasks = realIssues.length;
+            
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
             // Calculate values
@@ -649,6 +711,15 @@
             document.getElementById('xp-display').textContent = `${xp} SOULS`;
             document.getElementById('coins-display').textContent = `${completedTasks * 75} EMBERS`;
             
+            // Update side quest display
+            const sideQuestPercent = sideQuestIssues.length > 0 
+                ? Math.round((completedSideQuests.length / sideQuestIssues.length) * 100) 
+                : 0;
+            document.getElementById('side-quest-percent').textContent = `${sideQuestPercent}%`;
+            document.getElementById('side-quest-flame').style.width = `${sideQuestPercent}%`;
+            document.getElementById('side-quest-subtitle').textContent = 
+                `Side quests • ${completedSideQuests.length}/${sideQuestIssues.length} found`;
+            
             // Update progress message
             const messages = [
                 "Thou art yet to begin thy journey, Hollow one...",
@@ -665,12 +736,13 @@
             document.getElementById('progress-message').textContent = messages[messageIndex];
             
             updateSprintProgress(closedIssues);
+            updateCovenants(sideQuestIssues, completedSideQuests);
         }
 
         function calculatePortfolioValue(completed) {
             const baseValue = completed * 150;
             const levelBonus = Math.floor(completed / 10) * 500;
-            const masterworkBonus = completed >= 78 ? 15000 : 0;
+            const masterworkBonus = completed >= totalTasks ? 15000 : 0;
             return baseValue + levelBonus + masterworkBonus;
         }
 
@@ -683,35 +755,92 @@
                 'Hollow', 'Unkindled', 'Bearer of the Curse', 'Ashen One',
                 'Seeker of Fire', 'Keeper of Embers', 'Digital Wanderer',
                 'Code Weaver', 'Render Knight', 'Shader Sorcerer',
-                'Lord of Cinder', 'Transcendent'
+                'Lord of Cinder', 'Transcendent', 'Eternal Fragment'
             ];
             return titles[Math.min(level - 1, titles.length - 1)];
         }
 
         function updateSprintProgress(closedIssues) {
-            // Count by issue ranges - adjust based on your actual issue numbering
             let sprint1Count = 0, sprint2Count = 0, sprint3Count = 0;
             
             closedIssues.forEach(issue => {
-                if (issue.number >= 70 && issue.number <= 77) sprint1Count++;
-                else if (issue.number >= 42 && issue.number <= 69) sprint2Count++;
-                else if (issue.number >= 22 && issue.number <= 41) sprint3Count++;
+                // Check labels first
+                if (issue.labels && issue.labels.some(label => label.name === 'Sprint 1')) {
+                    sprint1Count++;
+                } else if (issue.labels && issue.labels.some(label => label.name === 'Sprint 2')) {
+                    sprint2Count++;
+                } else if (issue.labels && issue.labels.some(label => label.name === 'Sprint 3')) {
+                    sprint3Count++;
+                } else {
+                    // Fallback to issue number ranges
+                    if (issue.number >= 70 && issue.number <= 77) sprint1Count++;
+                    else if (issue.number >= 42 && issue.number <= 69) sprint2Count++;
+                    else if (issue.number >= 22 && issue.number <= 41) sprint3Count++;
+                }
             });
             
             updateBonfire('sprint-1', sprint1Count, 8);
             updateBonfire('sprint-2', sprint2Count, 28);
             updateBonfire('sprint-3', sprint3Count, 20);
-            updateBonfire('side-quests', 0, 18); // Side quests not created yet
         }
 
         function updateBonfire(id, completed, total) {
             const element = document.getElementById(id);
+            if (!element) return;
+            
             const percent = Math.round((completed / total) * 100);
-            element.querySelector('.bonfire-header > div:nth-child(2)').textContent = `${percent}%`;
-            element.querySelector('.bonfire-flame').style.width = `${percent}%`;
+            const percentEl = element.querySelector('.bonfire-header > div:nth-child(2)');
+            if (percentEl) percentEl.textContent = `${percent}%`;
+            
+            const flameEl = element.querySelector('.bonfire-flame');
+            if (flameEl) flameEl.style.width = `${percent}%`;
             
             if (percent === 100) {
                 element.classList.add('lit');
+            }
+        }
+
+        function updateCovenants(sideQuestIssues, completedSideQuests) {
+            // Count by covenant type
+            let womenComplete = 0, womenTotal = 0;
+            let easternComplete = 0, easternTotal = 0;
+            let opensourceComplete = 0, opensourceTotal = 0;
+            
+            sideQuestIssues.forEach(issue => {
+                const labels = issue.labels.map(l => l.name);
+                
+                if (labels.includes('forgotten-women')) {
+                    womenTotal++;
+                    if (issue.state === 'closed') womenComplete++;
+                } else if (labels.includes('eastern-masters')) {
+                    easternTotal++;
+                    if (issue.state === 'closed') easternComplete++;
+                } else if (labels.includes('open-source')) {
+                    opensourceTotal++;
+                    if (issue.state === 'closed') opensourceComplete++;
+                }
+            });
+            
+            // Update covenant displays
+            const womenCard = document.getElementById('covenant-women');
+            if (womenCard) {
+                womenCard.querySelector('.covenant-progress').textContent = 
+                    `${womenComplete}/${womenTotal || 6} trials complete`;
+                if (womenComplete === 6) womenCard.classList.add('joined');
+            }
+            
+            const easternCard = document.getElementById('covenant-eastern');
+            if (easternCard) {
+                easternCard.querySelector('.covenant-progress').textContent = 
+                    `${easternComplete}/${easternTotal || 6} trials complete`;
+                if (easternComplete === 6) easternCard.classList.add('joined');
+            }
+            
+            const opensourceCard = document.getElementById('covenant-opensource');
+            if (opensourceCard) {
+                opensourceCard.querySelector('.covenant-progress').textContent = 
+                    `${opensourceComplete}/${opensourceTotal || 6} trials complete`;
+                if (opensourceComplete === 6) opensourceCard.classList.add('joined');
             }
         }
 
@@ -749,7 +878,7 @@
                     window.audioSystem.playMemoryNarration(memory.text, id);
                 }
                 
-                // Award souls and embers
+                // Award souls and embers (would be tracked in game state)
                 console.log(`Memory ${id} unlocked: +${memory.souls} souls, +${memory.embers} embers`);
             } else {
                 document.getElementById('story-title').textContent = `Memory Fragment ${id}`;
@@ -760,28 +889,22 @@
             modal.style.display = 'block';
         }
 
-        // Initialize audio system
-        let audioSystem = null;
-        
-        // Audio toggles
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            
-            // Initialize audio system
-            audioSystem = new AudioSystem();
-            window.audioSystem = audioSystem;
-            
-            // Auto-refresh every 5 minutes
-            setInterval(loadData, 5 * 60 * 1000);
-            
+        function closeModal() {
+            document.getElementById('story-modal').style.display = 'none';
+            if (audioSystem) audioSystem.stopNarration();
+        }
+
+        function setupEventHandlers() {
             // Audio controls
             document.getElementById('vo-toggle').addEventListener('click', function() {
+                if (!audioSystem) return;
                 const enabled = audioSystem.toggleVO();
                 this.classList.toggle('active', enabled);
                 this.textContent = enabled ? 'Voice: British Lady' : 'Voice: Silent';
             });
             
             document.getElementById('music-toggle').addEventListener('click', function() {
+                if (!audioSystem) return;
                 const enabled = audioSystem.toggleMusic();
                 this.classList.toggle('active', enabled);
                 this.textContent = enabled ? 'Ambience: Active' : 'Ambience: Silent';
@@ -789,18 +912,27 @@
             
             // Story mode button
             document.getElementById('story-mode').addEventListener('click', function() {
-                // Show all memories in sequence
                 alert('Story mode: Experience all unlocked memories in sequence (coming soon)');
             });
             
-            // Close modal handler
+            // Covenant cards
+            document.querySelectorAll('.covenant-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const name = this.querySelector('.covenant-name').textContent;
+                    showMemory(0); // Show placeholder for now
+                    document.getElementById('story-title').textContent = name;
+                    document.getElementById('story-content').textContent = 
+                        `The covenant of ${name} awaits. Complete their trials to unlock their forgotten knowledge...`;
+                });
+            });
+            
+            // Close modal on background click
             document.getElementById('story-modal').addEventListener('click', function(e) {
                 if (e.target === this) {
-                    this.style.display = 'none';
-                    if (audioSystem) audioSystem.stopNarration();
+                    closeModal();
                 }
             });
-        });
+        }
     </script>
 </body>
 </html>
