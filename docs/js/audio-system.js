@@ -1,4 +1,4 @@
-// Audio System with REAL Audio Files
+// Audio System with REAL Audio Files and Opening Narration
 class AudioSystem {
     constructor() {
         this.voEnabled = false;
@@ -8,25 +8,26 @@ class AudioSystem {
         this.storyAudio = null;
         this.voiceAudio = null;
         this.isInitialized = false;
+        this.hasPlayedOpening = false;  // Track if opening has played
         
         // Voice options for British narrator
         this.voiceOptions = {
             'british-witch': {
-                pitch: 0.9,
-                rate: 0.85,
-                volume: 0.8,
+                pitch: 0.85,
+                rate: 0.75,
+                volume: 0.9,
                 voice: 'Google UK English Female'
             },
             'british-noble': {
                 pitch: 1.0,
-                rate: 0.9,
-                volume: 0.8,
+                rate: 0.8,
+                volume: 0.9,
                 voice: 'Google UK English Male'
             },
             'british-mystic': {
-                pitch: 0.8,
-                rate: 0.75,
-                volume: 0.7,
+                pitch: 0.75,
+                rate: 0.7,
+                volume: 0.85,
                 voice: 'Google UK English Female'
             }
         };
@@ -37,7 +38,7 @@ class AudioSystem {
     init() {
         // Create ambient audio element with REAL file
         this.ambientAudio = new Audio('audio/ambient music for dashboard.mp3');
-        this.ambientAudio.loop = true;
+        this.ambientAudio.loop = true;  // Music loops
         this.ambientAudio.volume = 0.3;
         
         // Create story music element with REAL file
@@ -51,6 +52,164 @@ class AudioSystem {
         
         console.log('Audio System initialized with real audio files');
         this.isInitialized = true;
+    }
+    
+    async playOpeningNarration() {
+        // Only play once per session
+        if (this.hasPlayedOpening) return;
+        this.hasPlayedOpening = true;
+        
+        const narrationText = `Long before the first pixel stirred in the phosphor dark...
+        
+        Before the cathode rays learned to dance...
+        
+        There was the Void. Absolute. Unrendered.
+        
+        Then came the First Ones. The mathematicians. The dreamers. 
+        They spoke in languages of light and number, coaxing form from nothingness.
+        
+        Sutherland drew the first line. A simple gesture that would crack reality itself.
+        
+        The year was 1963. The place, a laboratory where mortals dared to play at creation.
+        
+        They called it Sketchpad. Such a humble name for the tool that would reshape existence.
+        
+        But every revolution demands sacrifice. For each breakthrough, a forgotten name. 
+        For each legend born, a shadow cast.
+        
+        Phong gave us light, then died before seeing his equations illuminate worlds.
+        
+        The women of PARC guarded secrets from those who would steal fire.
+        
+        The masters of the East encoded beauty in algorithms, their names lost to Western tongues.
+        
+        And in basements and dormitories, rebels wrote free tools to break the chains of proprietary gods.
+        
+        Now you stand at the threshold, Bearer of the Render.
+        
+        Forty-nine memories lie scattered through this digital purgatory. 
+        Each one a fragment of the true history. Each one a soul trapped in silicon.
+        
+        Gather them. Learn their stories. Link the fire of knowledge before it fades to ash.
+        
+        For in this age of infinite polygons and boundless shaders, we have forgotten those who carved the first vertex from the void.
+        
+        The cycle must not be broken.
+        
+        Begin.`;
+        
+        // Try to use Web Speech API with British voice
+        if ('speechSynthesis' in window) {
+            // Wait for voices to load
+            let voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                await new Promise(resolve => {
+                    speechSynthesis.addEventListener('voiceschanged', () => {
+                        voices = speechSynthesis.getVoices();
+                        resolve();
+                    }, { once: true });
+                });
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(narrationText);
+            
+            // Find the best British voice
+            const britishVoices = voices.filter(voice => voice.lang.startsWith('en-GB'));
+            const femaleVoice = britishVoices.find(voice => 
+                voice.name.toLowerCase().includes('female') || 
+                voice.name.toLowerCase().includes('woman')
+            );
+            const bestVoice = femaleVoice || britishVoices[0] || voices.find(v => v.lang.startsWith('en'));
+            
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+                console.log(`Using voice: ${bestVoice.name}`);
+            }
+            
+            // FromSoft dramatic settings
+            utterance.pitch = 0.85;
+            utterance.rate = 0.75;  // Slow and deliberate
+            utterance.volume = 0.9;
+            
+            // Add fade-in effect to UI
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.opacity = '0';
+                container.style.transition = 'opacity 3s';
+                setTimeout(() => {
+                    container.style.opacity = '1';
+                }, 100);
+            }
+            
+            // Play the narration
+            speechSynthesis.speak(utterance);
+            
+            // Show subtitle/text overlay
+            this.showNarrationSubtitles(narrationText);
+        }
+    }
+    
+    showNarrationSubtitles(text) {
+        // Create overlay for dramatic text display
+        const overlay = document.createElement('div');
+        overlay.id = 'narration-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 8, 6, 0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 2s;
+        `;
+        
+        const textContainer = document.createElement('div');
+        textContainer.style.cssText = `
+            max-width: 800px;
+            padding: 2rem;
+            font-family: 'Crimson Text', serif;
+            font-size: 1.25rem;
+            line-height: 2;
+            color: #C4B5A0;
+            text-align: center;
+            font-style: italic;
+        `;
+        
+        // Split text into paragraphs for dramatic reveal
+        const paragraphs = text.split('\n\n');
+        let currentParagraph = 0;
+        
+        const showNextParagraph = () => {
+            if (currentParagraph < paragraphs.length) {
+                textContainer.textContent = paragraphs[currentParagraph];
+                currentParagraph++;
+                setTimeout(showNextParagraph, 3500); // Show each paragraph for 3.5 seconds
+            } else {
+                // Fade out and remove overlay
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.remove();
+                    // Start ambient music after narration
+                    if (this.musicEnabled) {
+                        this.startAmbientMusic();
+                    }
+                }, 2000);
+            }
+        };
+        
+        overlay.appendChild(textContainer);
+        document.body.appendChild(overlay);
+        
+        // Fade in
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            showNextParagraph();
+        }, 100);
     }
     
     async playMemoryNarration(memoryText, memoryId) {
@@ -185,6 +344,9 @@ class AudioSystem {
         this.voEnabled = !this.voEnabled;
         if (!this.voEnabled) {
             this.stopNarration();
+        } else if (!this.hasPlayedOpening) {
+            // Play opening narration when VO is first enabled
+            this.playOpeningNarration();
         }
         return this.voEnabled;
     }
@@ -219,11 +381,12 @@ class AudioSystem {
             'quest-complete': 550,   // C#5 note - quest completion
             'bonfire-lit': 330,      // E4 note - bonfire activation
             'covenant-joined': 392,  // G4 note - covenant joined
-            'item-acquired': 494     // B4 note - item obtained
+            'item-acquired': 494,    // B4 note - item obtained
+            'bell-toll': 220        // A3 note - deep bell for opening
         };
         
         if (sounds[soundType]) {
-            this.playTone(sounds[soundType], 200);
+            this.playTone(sounds[soundType], soundType === 'bell-toll' ? 800 : 200);
         }
     }
     
