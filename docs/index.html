@@ -390,12 +390,12 @@
             <!-- Soul Counter -->
             <div class="souls-bar">
                 <div class="soul-counter">
-                    <span>✦</span>
-                    <span class="soul-value" id="xp-display">0 SOULS</span>
+                    <span>$</span>
+                    <span class="soul-value" id="value-display">$0 VALUE</span>
                 </div>
                 <div class="soul-counter">
-                    <span>◈</span>
-                    <span class="soul-value" id="coins-display">0 EMBERS</span>
+                    <span>M</span>
+                    <span class="soul-value" id="monthly-display">$0/MONTH</span>
                 </div>
                 <div class="soul-counter">
                     <span>⚔</span>
@@ -551,8 +551,8 @@
         </div>
     </div>
 
+    <script src="js/asset-values.js"></script>
     <script src="js/real-task-values.js"></script>
-    <script src="js/task-values.js"></script>
     <script>
         // Global state
         let issues = [];
@@ -591,23 +591,25 @@
         });
 
         function calculateRewards(issue) {
-            // Use the detailed task valuation system
-            if (typeof TASK_VALUES !== 'undefined' && TASK_VALUES[issue.number]) {
-                return TASK_VALUES[issue.number];
+            // Get real asset value from ASSET_VALUES
+            const asset = ASSET_VALUES[issue.number];
+            
+            if (asset) {
+                return {
+                    value: asset.value,
+                    asset: asset.asset,
+                    category: asset.category,
+                    deliverable: asset.deliverable
+                };
             }
             
-            // Fallback to label-based calculation for unknown issues
-            const labels = issue.labels?.map(l => l.name) || [];
-            let xp = 50, coins = 25, value = 100; // defaults
-            
-            // Adjust based on labels
-            if (labels.includes('epic')) { xp = 500; coins = 250; value = 1000; }
-            else if (labels.includes('Sprint 3')) { xp = 150; coins = 75; value = 225; }
-            else if (labels.includes('Sprint 2')) { xp = 100; coins = 50; value = 150; }
-            else if (labels.includes('side-quest')) { xp = 200; coins = 100; value = 300; }
-            else if (labels.includes('bug')) { xp = 25; coins = 10; value = 50; }
-            
-            return { xp, coins, value };
+            // Fallback for unknown issues
+            return {
+                value: 0,
+                asset: 'Unknown',
+                category: 'general',
+                deliverable: 'TBD'
+            };
         }
 
         function updateDashboard() {
@@ -620,31 +622,23 @@
             const closedIssues = realIssues.filter(issue => issue.state === 'closed');
             
             // Calculate total rewards from closed issues
-            let totalXP = 0;
-            let totalCoins = 0;
-            let portfolioValue = 0;
-            
+            // Calculate total portfolio value from closed issues
+            let totalValue = 0;
             closedIssues.forEach(issue => {
                 const rewards = calculateRewards(issue);
-                totalXP += rewards.xp;
-                totalCoins += rewards.coins;
+                totalValue += rewards.value;
             });
             
-            // Calculate portfolio value properly
-            const closedNumbers = closedIssues.map(i => i.number);
-            const portfolio = calculatePortfolioValue(closedNumbers);
-            portfolioValue = portfolio.total;
+            // Calculate monthly potential (10% of total value as passive income)
+            const monthlyPotential = Math.round(totalValue * 0.1);
+            const afterFees = Math.round(monthlyPotential * 0.7); // After marketplace fees
             
-            // Calculate level from XP
-            const level = Math.floor(Math.sqrt(totalXP / 100)) + 1;
-            const levelTitle = getLevelTitle(level);
-            
-            // Update UI
-            document.getElementById('xp-display').textContent = `${totalXP.toLocaleString()} SOULS`;
-            document.getElementById('coins-display').textContent = `${totalCoins.toLocaleString()} EMBERS`;
-            document.getElementById('level-display').textContent = `LEVEL ${level} - ${levelTitle}`;
-            document.getElementById('portfolio-value').textContent = `$${portfolioValue.toLocaleString()}`;
-            document.getElementById('monthly-income').textContent = `$${Math.round(portfolioValue * 0.2)}`;
+            // Update UI with real values
+            document.getElementById('value-display').textContent = `${totalValue} VALUE`;
+            document.getElementById('monthly-display').textContent = `${monthlyPotential}/MONTH`;
+            document.getElementById('level-display').textContent = `${closedIssues.length}/${realIssues.length} COMPLETE`;
+            document.getElementById('portfolio-value').textContent = `${totalValue}`;
+            document.getElementById('monthly-income').textContent = `${afterFees}`;
             document.getElementById('tasks-complete').textContent = `${closedIssues.length}/${realIssues.length}`;
             
             // Update progress
@@ -860,35 +854,15 @@
                 const suggestion = suggestTaskAssignment(task);
                 const isRecommended = currentUser && suggestion === currentUser;
                 
-                // Get complexity and time from task values
-                const complexity = rewards.complexity || 'medium';
-                const time = rewards.time || '?';
-                const skill = rewards.skill || 'general';
-                
-                // Color code by complexity
-                const complexityColor = {
-                    'trivial': 'var(--faded-text)',
-                    'easy': 'var(--success-green)',
-                    'medium': 'var(--soul-blue)',
-                    'hard': 'var(--ember-glow)',
-                    'expert': 'var(--blood-red)'
-                }[complexity] || 'var(--pale-text)';
-                
                 return `
                     <div style="background: var(--stone-dark); border: 1px solid ${isRecommended ? 'var(--soul-blue)' : 'var(--border-iron)'}; padding: 1rem; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span style="color: var(--faded-text);">#${task.number}</span>
-                            <div style="text-align: right;">
-                                <span style="color: var(--ember-glow); font-weight: bold;">+${rewards.xp} XP</span>
-                                <span style="color: var(--pale-text); margin-left: 0.5rem;">${rewards.value}</span>
-                            </div>
+                            <span style="color: var(--ember-glow); font-weight: bold;">${rewards.value}</span>
                         </div>
                         <h3 style="color: var(--pale-text); margin: 0.5rem 0;">${task.title}</h3>
-                        <div style="display: flex; gap: 1rem; margin: 0.5rem 0; font-size: 0.85rem;">
-                            <span style="color: ${complexityColor};">${complexity.toUpperCase()}</span>
-                            <span style="color: var(--faded-text);">Time: ${time}</span>
-                            <span style="color: var(--faded-text);">Skill: ${skill}</span>
-                        </div>
+                        <p style="color: var(--faded-text); font-size: 0.9rem; margin: 0.5rem 0;">Creates: ${rewards.asset}</p>
+                        <p style="color: var(--faded-text); font-size: 0.85rem;">Category: ${rewards.category}</p>
                         ${isRecommended ? '<p style="color: var(--soul-blue); font-size: 0.9rem;">Recommended for you</p>' : ''}
                         ${assignment ? `<p style="color: var(--ember-glow); font-size: 0.9rem;">Claimed by ${assignment}</p>` : ''}
                         <div style="margin-top: 1rem;">
@@ -1001,8 +975,11 @@
                         <h3 style="color: var(--ember-glow); margin-bottom: 0.5rem;">
                             ${index + 1}. ${issue.title}
                         </h3>
+                        <p style="color: var(--pale-text); font-size: 0.9rem;">
+                            Asset: ${rewards.asset}
+                        </p>
                         <p style="color: var(--faded-text); font-size: 0.85rem;">
-                            +${rewards.xp} souls • +${rewards.coins} embers • $${rewards.value} value
+                            Value: ${rewards.value} • Category: ${rewards.category}
                         </p>
                     </div>
                 `;
