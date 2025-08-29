@@ -1,10 +1,11 @@
-// Audio System for British VO and Ambient Music
+// Audio System with REAL Audio Files
 class AudioSystem {
     constructor() {
         this.voEnabled = false;
         this.musicEnabled = false;
         this.currentVoice = 'british-witch';
         this.ambientAudio = null;
+        this.storyAudio = null;
         this.voiceAudio = null;
         this.isInitialized = false;
         
@@ -14,7 +15,7 @@ class AudioSystem {
                 pitch: 0.9,
                 rate: 0.85,
                 volume: 0.8,
-                voice: 'Google UK English Female' // fallback to speech synthesis
+                voice: 'Google UK English Female'
             },
             'british-noble': {
                 pitch: 1.0,
@@ -34,15 +35,21 @@ class AudioSystem {
     }
     
     init() {
-        // Create ambient audio element
-        this.ambientAudio = new Audio();
+        // Create ambient audio element with REAL file
+        this.ambientAudio = new Audio('audio/ambient music for dashboard.mp3');
         this.ambientAudio.loop = true;
         this.ambientAudio.volume = 0.3;
         
-        // Use data URL for ambient sound (brown noise as placeholder)
-        // In production, replace with actual Dragon Age style ambient music
-        this.ambientAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+AAABQr+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+AAABQr+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBCuBzvLZijMGHGS35u+mVhEQU3qHoo+A';
+        // Create story music element with REAL file
+        this.storyAudio = new Audio('audio/background music for stories.mp3');
+        this.storyAudio.loop = true;
+        this.storyAudio.volume = 0.25;
         
+        // Preload audio files
+        this.ambientAudio.load();
+        this.storyAudio.load();
+        
+        console.log('Audio System initialized with real audio files');
         this.isInitialized = true;
     }
     
@@ -52,14 +59,24 @@ class AudioSystem {
         // Stop any current narration
         this.stopNarration();
         
-        // Check if we have a pre-recorded audio file (future implementation)
-        const audioFile = `audio/memories/memory_${memoryId}.mp3`;
+        // Start story background music
+        if (this.musicEnabled && this.storyAudio) {
+            try {
+                this.storyAudio.play();
+                this.fadeIn(this.storyAudio, 0.25, 1000);
+            } catch (e) {
+                console.log('Story music playback failed:', e);
+            }
+        }
+        
+        // Check if we have a pre-recorded VO file
+        const voFile = `audio/vo/memory_${memoryId}.mp3`;
         
         try {
             // Try to load pre-recorded audio
-            const response = await fetch(audioFile);
+            const response = await fetch(voFile);
             if (response.ok) {
-                this.voiceAudio = new Audio(audioFile);
+                this.voiceAudio = new Audio(voFile);
                 this.voiceAudio.volume = 0.8;
                 await this.voiceAudio.play();
                 return;
@@ -87,10 +104,11 @@ class AudioSystem {
             utterance.rate = voiceConfig.rate;
             utterance.volume = voiceConfig.volume;
             
-            // Add dramatic pauses
+            // Add dramatic pauses for FromSoft style
             const dramaticText = memoryText
                 .replace(/\./g, '...')
-                .replace(/,/g, ',,');
+                .replace(/,/g, ',,')
+                .replace(/:/g, ':::');
             
             utterance.text = dramaticText;
             speechSynthesis.speak(utterance);
@@ -105,16 +123,25 @@ class AudioSystem {
         if ('speechSynthesis' in window) {
             speechSynthesis.cancel();
         }
+        // Fade out story music
+        if (this.storyAudio && !this.storyAudio.paused) {
+            this.fadeOut(this.storyAudio, 1000, () => {
+                this.storyAudio.pause();
+            });
+        }
     }
     
     async startAmbientMusic() {
         if (!this.musicEnabled || !this.ambientAudio) return;
         
         try {
+            // Use the REAL ambient music file
             await this.ambientAudio.play();
             this.fadeIn(this.ambientAudio, 0.3, 2000);
+            console.log('Playing real ambient music');
         } catch (e) {
             console.log('Ambient music playback failed:', e);
+            // User needs to interact with page first
         }
     }
     
@@ -168,6 +195,11 @@ class AudioSystem {
             this.startAmbientMusic();
         } else {
             this.stopAmbientMusic();
+            if (this.storyAudio && !this.storyAudio.paused) {
+                this.fadeOut(this.storyAudio, 1000, () => {
+                    this.storyAudio.pause();
+                });
+            }
         }
         return this.musicEnabled;
     }
@@ -178,13 +210,16 @@ class AudioSystem {
         }
     }
     
-    // Play sound effects
+    // Play sound effects - FromSoft style
     playSound(soundType) {
         const sounds = {
-            'soul-collected': 440,  // A4 note
-            'level-up': 880,        // A5 note
-            'memory-unlock': 660,    // E5 note
-            'quest-complete': 550    // C#5 note
+            'soul-collected': 440,  // A4 note - soul collection
+            'level-up': 880,        // A5 note - level up fanfare
+            'memory-unlock': 660,    // E5 note - memory revealed
+            'quest-complete': 550,   // C#5 note - quest completion
+            'bonfire-lit': 330,      // E4 note - bonfire activation
+            'covenant-joined': 392,  // G4 note - covenant joined
+            'item-acquired': 494     // B4 note - item obtained
         };
         
         if (sounds[soundType]) {
@@ -206,7 +241,9 @@ class AudioSystem {
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        // Envelope for more pleasant sound
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
         
         oscillator.start(audioContext.currentTime);
