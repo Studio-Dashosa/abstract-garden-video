@@ -910,9 +910,55 @@
                 this.textContent = enabled ? 'Ambience: Active' : 'Ambience: Silent';
             });
             
-            // Story mode button
+            // Story mode button - Read all chronicles
             document.getElementById('story-mode').addEventListener('click', function() {
-                alert('Story mode: Experience all unlocked memories in sequence (coming soon)');
+                // Open chronicles viewer
+                const modal = document.getElementById('story-modal');
+                const allMemories = [];
+                
+                // Collect all unlocked memories
+                for (let i = 1; i <= completedTasks && i <= 49; i++) {
+                    if (window.memoryFragments && window.memoryFragments[i - 1]) {
+                        allMemories.push(window.memoryFragments[i - 1]);
+                    }
+                }
+                
+                if (allMemories.length === 0) {
+                    document.getElementById('story-title').textContent = 'No Chronicles Yet';
+                    document.getElementById('story-content').innerHTML = 
+                        'Complete tasks to unlock memory fragments and reveal the chronicles of digital creation...';
+                } else {
+                    // Create chronicle view
+                    document.getElementById('story-title').textContent = `Chronicles of the Abstract Garden`;
+                    let chronicleHTML = `<div style="max-height: 60vh; overflow-y: auto;">`;
+                    chronicleHTML += `<p style="margin-bottom: 1rem; color: var(--faded-text);">You have unlocked ${allMemories.length} of 49 memories...</p>`;
+                    
+                    allMemories.forEach((memory, index) => {
+                        chronicleHTML += `
+                            <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-iron);">
+                                <h3 style="color: var(--ember-glow); margin-bottom: 0.5rem;">
+                                    ${index + 1}. ${memory.title}
+                                </h3>
+                                <p style="color: var(--pale-text); line-height: 1.6;">
+                                    ${memory.text}
+                                </p>
+                                <div style="margin-top: 0.5rem; color: var(--faded-text); font-size: 0.85rem;">
+                                    +${memory.souls || 50} souls • +${memory.embers || 25} embers
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    chronicleHTML += `</div>`;
+                    document.getElementById('story-content').innerHTML = chronicleHTML;
+                    
+                    // Auto-narrate if voice is enabled
+                    if (window.audioSystem && window.audioSystem.voEnabled) {
+                        window.audioSystem.playChronicleNarration(allMemories);
+                    }
+                }
+                
+                modal.style.display = 'block';
             });
             
             // Covenant cards
