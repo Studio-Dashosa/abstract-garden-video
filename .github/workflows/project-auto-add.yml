@@ -12,13 +12,9 @@ permissions:
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_URL: ${{ secrets.PROJECT_URL }}
-      PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
     steps:
       - name: Add to org project
-        if: ${{ env.PROJECT_URL != '' && env.PROJECTS_TOKEN != '' }}
         uses: actions/add-to-project@v0.6.0
         with:
-          project-url: ${{ env.PROJECT_URL }}
-          github-token: ${{ env.PROJECTS_TOKEN }}
+          project-url: https://github.com/orgs/Studio-Dashosa/projects/2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
