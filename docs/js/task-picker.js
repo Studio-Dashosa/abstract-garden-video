@@ -1,454 +1,473 @@
-/**
- * Task Picker Interface - Direct GitHub integration
- * Allows picking tasks, uploading deliverables, and tracking progress
- */
-
+// Task Picker Component
 class TaskPicker {
-  constructor() {
-    this.currentFilter = 'all';
-    this.selectedTask = null;
-    this.issuesData = [];
-    this.completedTasks = new Set();
-    this.userUploads = {};
-    this.sprintEnforcer = null;
-    
-    this.init();
-  }
-
-  async init() {
-    // Initialize sprint enforcer
-    if (window.SprintEnforcer) {
-      this.sprintEnforcer = new window.SprintEnforcer();
+    constructor() {
+        this.currentUser = null;
+        this.filters = {
+            assignee: 'all',
+            sprint: 'all',
+            difficulty: 'all',
+            status: 'open'
+        };
     }
-    
-    await this.loadIssues();
-    this.createUI();
-    this.attachEventListeners();
-    this.loadSavedProgress();
-  }
 
-  async loadIssues() {
-    try {
-      const response = await fetch('./data/issues.json');
-      this.issuesData = await response.json();
-      
-      // Enrich with task values
-      this.issuesData.forEach(issue => {
-        const taskValue = window.getTaskValue(issue.number);
-        issue.xp = taskValue.xp;
-        issue.coins = taskValue.coins;
-        issue.difficulty = taskValue.difficulty;
-        issue.value = taskValue.value;
-      });
-    } catch (error) {
-      console.error('Failed to load issues:', error);
-      this.issuesData = [];
+    init() {
+        this.createUI();
+        this.loadTasks();
     }
-  }
 
-  createUI() {
-    const container = document.createElement('div');
-    container.id = 'task-picker-container';
-    container.className = 'task-picker-overlay';
-    container.innerHTML = `
-      <div class="task-picker-modal">
-        <div class="task-picker-header">
-          <h2 class="souls-title">Choose Your Trial</h2>
-          <button class="close-picker">×</button>
-        </div>
+    createUI() {
+        const pickerHTML = `
+            <div id="task-picker-modal" class="modal" style="display: none;">
+                <div class="modal-content task-picker">
+                    <h2>⚔️ Choose Your Quest</h2>
+                    
+                    <!-- User Selection -->
+                    <div class="user-select">
+                        <button class="user-btn" data-user="jesse">
+                            <span class="user-icon">🎭</span>
+                            <span>Jesse</span>
+                            <small>Animation & Rigging</small>
+                        </button>
+                        <button class="user-btn" data-user="michael">
+                            <span class="user-icon">🏗️</span>
+                            <span>Michael</span>
+                            <small>Modeling & Rendering</small>
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="task-filters">
+                        <select id="sprint-filter">
+                            <option value="all">All Sprints</option>
+                            <option value="Sprint 1">Sprint 1 - Foundation</option>
+                            <option value="Sprint 2">Sprint 2 - Animation</option>
+                            <option value="Sprint 3">Sprint 3 - Polish</option>
+                        </select>
+                        
+                        <select id="difficulty-filter">
+                            <option value="all">All Difficulties</option>
+                            <option value="easy">Easy (50 XP)</option>
+                            <option value="medium">Medium (100 XP)</option>
+                            <option value="hard">Hard (150 XP)</option>
+                            <option value="epic">Epic (500 XP)</option>
+                        </select>
+                        
+                        <select id="status-filter">
+                            <option value="open">Open Tasks</option>
+                            <option value="assigned">My Tasks</option>
+                            <option value="suggested">Suggested for Me</option>
+                        </select>
+                    </div>
+
+                    <!-- Task List -->
+                    <div id="task-list" class="task-list">
+                        <!-- Tasks will be inserted here -->
+                    </div>
+
+                    <!-- Close Button -->
+                    <button class="close-btn" onclick="taskPicker.close()">Close</button>
+                </div>
+            </div>
+        `;
+
+        // Add to page if not exists
+        if (!document.getElementById('task-picker-modal')) {
+            document.body.insertAdjacentHTML('beforeend', pickerHTML);
+        }
+
+        // Add event listeners
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.selectUser(btn.dataset.user));
+        });
+
+        document.getElementById('sprint-filter').addEventListener('change', (e) => {
+            this.filters.sprint = e.target.value;
+            this.filterTasks();
+        });
+
+        document.getElementById('difficulty-filter').addEventListener('change', (e) => {
+            this.filters.difficulty = e.target.value;
+            this.filterTasks();
+        });
+
+        document.getElementById('status-filter').addEventListener('change', (e) => {
+            this.filters.status = e.target.value;
+            this.filterTasks();
+        });
+    }
+
+    selectUser(user) {
+        this.currentUser = user;
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.user === user);
+        });
+        this.filterTasks();
+    }
+
+    loadTasks() {
+        // Get issues from global state
+        const tasks = window.issues || [];
+        this.displayTasks(tasks);
+    }
+
+    filterTasks() {
+        let tasks = window.issues || [];
         
-        <div class="task-filters">
-          <button class="filter-btn active" data-filter="all">All Tasks</button>
-          <button class="filter-btn" data-filter="Sprint 1">Sprint 1 - Foundation</button>
-          <button class="filter-btn" data-filter="Sprint 2">Sprint 2 - Development</button>
-          <button class="filter-btn" data-filter="Sprint 3">Sprint 3 - Mastery</button>
-          <button class="filter-btn" data-filter="available">Available Only</button>
-        </div>
+        // Filter by sprint
+        if (this.filters.sprint !== 'all') {
+            tasks = tasks.filter(task => 
+                task.labels?.some(l => l.name === this.filters.sprint)
+            );
+        }
 
-        <div class="task-list-container">
-          <div class="task-grid">
-            <!-- Tasks will be populated here -->
-          </div>
-        </div>
+        // Filter by difficulty
+        if (this.filters.difficulty !== 'all') {
+            tasks = tasks.filter(task => {
+                const xp = this.calculateXP(task);
+                switch(this.filters.difficulty) {
+                    case 'easy': return xp <= 50;
+                    case 'medium': return xp > 50 && xp <= 100;
+                    case 'hard': return xp > 100 && xp <= 200;
+                    case 'epic': return xp > 200;
+                    default: return true;
+                }
+            });
+        }
 
-        <div class="task-details" style="display: none;">
-          <h3 class="task-title"></h3>
-          <div class="task-rewards">
-            <span class="xp-reward">XP: 0</span>
-            <span class="coin-reward">Coins: 0</span>
-            <span class="value-reward">Value: $0</span>
-          </div>
-          <div class="task-description"></div>
-          
-          <div class="deliverable-section">
-            <h4>Upload Deliverable</h4>
-            <div class="upload-area">
-              <input type="file" id="deliverable-upload" accept=".ma,.mb,.blend,.fbx,.obj,.png,.jpg,.mp4">
-              <label for="deliverable-upload" class="upload-label">
-                <span class="upload-icon">📁</span>
-                <span>Choose File or Drag & Drop</span>
-              </label>
-              <div class="upload-preview"></div>
-            </div>
+        // Filter by status/assignment
+        if (this.filters.status === 'assigned' && this.currentUser) {
+            const assignments = JSON.parse(localStorage.getItem('taskAssignments') || '{}');
+            tasks = tasks.filter(task => assignments[task.number] === this.currentUser);
+        } else if (this.filters.status === 'suggested' && this.currentUser) {
+            tasks = tasks.filter(task => {
+                const suggestion = this.suggestAssignment(task);
+                return suggestion === this.currentUser;
+            });
+        }
+
+        // Filter out closed and dashboard issues
+        tasks = tasks.filter(task => 
+            task.state === 'open' && 
+            !task.labels?.some(l => l.name === 'dashboard')
+        );
+
+        this.displayTasks(tasks);
+    }
+
+    displayTasks(tasks) {
+        const listEl = document.getElementById('task-list');
+        
+        if (tasks.length === 0) {
+            listEl.innerHTML = '<p class="no-tasks">No tasks match your filters</p>';
+            return;
+        }
+
+        const html = tasks.map(task => {
+            const xp = this.calculateXP(task);
+            const assignment = this.getAssignment(task.number);
+            const suggestion = this.suggestAssignment(task);
+            const isRecommended = this.currentUser && suggestion === this.currentUser;
             
-            <textarea class="completion-notes" placeholder="Describe what you learned..."></textarea>
+            return `
+                <div class="task-item ${assignment ? `assigned-${assignment}` : ''} ${isRecommended ? 'recommended' : ''}" 
+                     data-issue="${task.number}">
+                    <div class="task-header">
+                        <span class="task-number">#${task.number}</span>
+                        <span class="task-xp">+${xp} XP</span>
+                        ${isRecommended ? '<span class="recommended-badge">⭐ Recommended</span>' : ''}
+                        ${assignment ? `<span class="assigned-badge">${assignment.toUpperCase()[0]}</span>` : ''}
+                    </div>
+                    <h3 class="task-title">${task.title}</h3>
+                    <div class="task-labels">
+                        ${task.labels?.map(l => `<span class="label">${l.name}</span>`).join('') || ''}
+                    </div>
+                    <div class="task-actions">
+                        <button onclick="taskPicker.claimTask(${task.number})">Claim Task</button>
+                        <a href="${task.html_url}" target="_blank">View on GitHub</a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        listEl.innerHTML = html;
+    }
+
+    claimTask(issueNumber) {
+        if (!this.currentUser) {
+            alert('Please select who you are (Jesse or Michael) first!');
+            return;
+        }
+
+        const assignments = JSON.parse(localStorage.getItem('taskAssignments') || '{}');
+        assignments[issueNumber] = this.currentUser;
+        localStorage.setItem('taskAssignments', JSON.stringify(assignments));
+
+        // Update UI
+        const taskEl = document.querySelector(`[data-issue="${issueNumber}"]`);
+        if (taskEl) {
+            taskEl.classList.add(`assigned-${this.currentUser}`);
             
-            <div class="task-actions">
-              <button class="btn-start-task">Start Task</button>
-              <button class="btn-submit-task" style="display: none;">Submit Completion</button>
-              <a class="btn-github-link" href="#" target="_blank">View on GitHub</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(container);
-    this.renderTasks();
-  }
-
-  renderTasks() {
-    const grid = document.querySelector('.task-grid');
-    if (!grid) return;
-    
-    const filteredTasks = this.getFilteredTasks();
-    
-    grid.innerHTML = filteredTasks.map(task => {
-      const isCompleted = task.state === 'closed' || this.completedTasks.has(task.number);
-      const availability = this.sprintEnforcer ? this.sprintEnforcer.isTaskAvailable(task.number) : { available: true };
-      const isLocked = !availability.available;
-      const lockReason = availability.reason || '';
-      const difficultyColor = window.DIFFICULTY_COLORS[task.difficulty] || '#666';
-      
-      return `
-        <div class="task-card ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}" 
-             data-task-id="${task.number}"
-             style="border-color: ${difficultyColor}">
-          <div class="task-card-header">
-            <span class="task-number">#${task.number}</span>
-            <span class="task-difficulty" style="color: ${difficultyColor}">${task.difficulty}</span>
-          </div>
-          <h4 class="task-card-title">${task.title}</h4>
-          <div class="task-card-rewards">
-            <span class="xp">+${task.xp} XP</span>
-            <span class="coins">+${task.coins} 🪙</span>
-            <span class="value">${task.value}</span>
-          </div>
-          ${isCompleted ? '<div class="task-status">✓ Completed</div>' : ''}
-          ${isLocked ? `<div class="task-status" title="${lockReason}">🔒 ${lockReason}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-  }
-
-  getFilteredTasks() {
-    let filtered = this.issuesData.filter(task => task.number !== 78); // Exclude dashboard issue
-    
-    switch(this.currentFilter) {
-      case 'Sprint 1':
-        filtered = filtered.filter(t => t.labels.some(l => l.name === 'Sprint 1'));
-        break;
-      case 'Sprint 2':
-        filtered = filtered.filter(t => t.labels.some(l => l.name === 'Sprint 2'));
-        break;
-      case 'Sprint 3':
-        filtered = filtered.filter(t => t.labels.some(l => l.name === 'Sprint 3'));
-        break;
-      case 'available':
-        if (this.sprintEnforcer) {
-          const availableIds = this.sprintEnforcer.getAvailableTasks().map(t => t.id);
-          filtered = filtered.filter(t => availableIds.includes(t.number));
-        } else {
-          filtered = filtered.filter(t => !this.isTaskLocked(t) && t.state === 'open');
+            // Show confirmation
+            const confirmMsg = document.createElement('div');
+            confirmMsg.className = 'claim-success';
+            confirmMsg.textContent = `Task #${issueNumber} claimed by ${this.currentUser}!`;
+            taskEl.appendChild(confirmMsg);
+            
+            setTimeout(() => confirmMsg.remove(), 3000);
         }
-        break;
-    }
-    
-    // Sort by XP value (lower to higher for progression)
-    return filtered.sort((a, b) => a.xp - b.xp);
-  }
 
-  isTaskLocked(task) {
-    if (this.sprintEnforcer) {
-      const availability = this.sprintEnforcer.isTaskAvailable(task.number);
-      return !availability.available;
-    }
-    
-    // Fallback to simple sprint logic
-    const sprint1Complete = this.getCompletedByLabel('Sprint 1').length;
-    const sprint2Complete = this.getCompletedByLabel('Sprint 2').length;
-    
-    if (task.labels.some(l => l.name === 'Sprint 2')) {
-      return sprint1Complete < 5;
-    }
-    if (task.labels.some(l => l.name === 'Sprint 3')) {
-      return sprint2Complete < 10;
-    }
-    return false;
-  }
-
-  getCompletedByLabel(label) {
-    return this.issuesData.filter(task => 
-      (task.state === 'closed' || this.completedTasks.has(task.number)) &&
-      task.labels.some(l => l.name === label)
-    );
-  }
-
-  selectTask(taskId) {
-    const task = this.issuesData.find(t => t.number === parseInt(taskId));
-    if (!task) return;
-    
-    this.selectedTask = task;
-    const details = document.querySelector('.task-details');
-    
-    // Update details panel
-    details.querySelector('.task-title').textContent = task.title;
-    details.querySelector('.xp-reward').textContent = `XP: +${task.xp}`;
-    details.querySelector('.coin-reward').textContent = `Coins: +${task.coins}`;
-    details.querySelector('.value-reward').textContent = `Value: ${task.value}`;
-    details.querySelector('.task-description').innerHTML = this.parseMarkdown(task.body);
-    details.querySelector('.btn-github-link').href = task.html_url;
-    
-    // Show appropriate buttons
-    if (task.state === 'closed' || this.completedTasks.has(task.number)) {
-      details.querySelector('.btn-start-task').style.display = 'none';
-      details.querySelector('.btn-submit-task').style.display = 'none';
-      details.querySelector('.deliverable-section').innerHTML = `
-        <div class="task-completed-message">
-          ✓ Task Completed! 
-          ${this.userUploads[task.number] ? '<br>Deliverable uploaded' : ''}
-        </div>
-      `;
-    } else {
-      details.querySelector('.btn-start-task').style.display = 'block';
-      details.querySelector('.btn-submit-task').style.display = 'none';
-    }
-    
-    details.style.display = 'block';
-  }
-
-  handleFileUpload(file) {
-    if (!this.selectedTask) return;
-    
-    const preview = document.querySelector('.upload-preview');
-    const maxSize = 10 * 1024 * 1024; // 10MB limit
-    
-    if (file.size > maxSize) {
-      preview.innerHTML = '<div class="upload-error">File too large (max 10MB)</div>';
-      return;
-    }
-    
-    // Store file reference (in real app, would upload to server)
-    this.userUploads[this.selectedTask.number] = {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      uploadedAt: new Date().toISOString()
-    };
-    
-    preview.innerHTML = `
-      <div class="upload-success">
-        <span class="file-icon">📎</span>
-        <span class="file-name">${file.name}</span>
-        <span class="file-size">(${(file.size / 1024).toFixed(1)}KB)</span>
-      </div>
-    `;
-    
-    // Show submit button
-    document.querySelector('.btn-submit-task').style.display = 'block';
-    document.querySelector('.btn-start-task').style.display = 'none';
-  }
-
-  submitTask() {
-    if (!this.selectedTask) return;
-    
-    const notes = document.querySelector('.completion-notes').value;
-    const taskId = this.selectedTask.number;
-    
-    // Mark as completed through sprint enforcer
-    if (this.sprintEnforcer) {
-      try {
-        const result = this.sprintEnforcer.completeTask(taskId);
-        if (result.nextTask) {
-          console.log('Next recommended task:', result.nextTask.name);
-        }
-      } catch (error) {
-        alert(`Cannot complete task: ${error.message}`);
-        return;
-      }
-    }
-    
-    // Mark as completed
-    this.completedTasks.add(taskId);
-    
-    // Award XP and coins
-    const rewards = {
-      xp: this.selectedTask.xp,
-      coins: this.selectedTask.coins,
-      notes: notes,
-      upload: this.userUploads[taskId],
-      completedAt: new Date().toISOString()
-    };
-    
-    // Trigger reward animation
-    this.showRewardAnimation(rewards);
-    
-    // Update game state
-    if (window.gameState) {
-      window.gameState.completeTask(taskId, rewards);
-    }
-    
-    // Save progress
-    this.saveProgress();
-    
-    // Refresh UI
-    this.renderTasks();
-    this.selectTask(taskId);
-    
-    // Post to GitHub (would need backend)
-    this.postCompletionToGitHub(taskId, notes, this.userUploads[taskId]);
-  }
-
-  showRewardAnimation(rewards) {
-    const animation = document.createElement('div');
-    animation.className = 'reward-animation';
-    animation.innerHTML = `
-      <div class="reward-burst">
-        <div class="xp-gain">+${rewards.xp} XP</div>
-        <div class="coin-gain">+${rewards.coins} Coins</div>
-        <div class="message">Task Complete!</div>
-      </div>
-    `;
-    document.body.appendChild(animation);
-    
-    setTimeout(() => animation.remove(), 3000);
-  }
-
-  async postCompletionToGitHub(taskId, notes, upload) {
-    // This would need a backend API to post to GitHub
-    // For now, just log it
-    console.log('Task completion:', {
-      issue: taskId,
-      notes: notes,
-      upload: upload,
-      comment: `Task completed! ${upload ? `Deliverable: ${upload.name}` : ''}\n\n${notes}`
-    });
-    
-    // In production, this would:
-    // 1. Upload file to GitHub/S3
-    // 2. Post comment on issue
-    // 3. Close issue if authorized
-  }
-
-  attachEventListeners() {
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        this.currentFilter = e.target.dataset.filter;
-        this.renderTasks();
-      });
-    });
-
-    // Task cards
-    document.addEventListener('click', (e) => {
-      const card = e.target.closest('.task-card');
-      if (card && !card.classList.contains('locked')) {
-        this.selectTask(card.dataset.taskId);
-      }
-    });
-
-    // File upload
-    const uploadInput = document.getElementById('deliverable-upload');
-    if (uploadInput) {
-      uploadInput.addEventListener('change', (e) => {
-        if (e.target.files[0]) {
-          this.handleFileUpload(e.target.files[0]);
-        }
-      });
+        // Refresh the list
+        this.filterTasks();
     }
 
-    // Drag and drop
-    const uploadArea = document.querySelector('.upload-area');
-    if (uploadArea) {
-      uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-      });
-      
-      uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
-      });
-      
-      uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        if (e.dataTransfer.files[0]) {
-          this.handleFileUpload(e.dataTransfer.files[0]);
-        }
-      });
+    getAssignment(issueNumber) {
+        const assignments = JSON.parse(localStorage.getItem('taskAssignments') || '{}');
+        return assignments[issueNumber];
     }
 
-    // Action buttons
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn-start-task')) {
-        e.target.style.display = 'none';
-        document.querySelector('.upload-area').style.display = 'block';
-      }
-      
-      if (e.target.classList.contains('btn-submit-task')) {
-        this.submitTask();
-      }
-      
-      if (e.target.classList.contains('close-picker')) {
-        this.close();
-      }
-    });
-  }
+    calculateXP(task) {
+        const rewards = {
+            'Sprint 1': 50,
+            'Sprint 2': 100,
+            'Sprint 3': 150,
+            'side-quest': 200,
+            'epic': 500,
+            'bug': 25,
+            'enhancement': 75
+        };
 
-  parseMarkdown(text) {
-    if (!text) return '';
-    return text
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h4>$1</h4>')
-      .replace(/^# (.*$)/gim, '<h5>$1</h5>')
-      .replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>');
-  }
-
-  saveProgress() {
-    localStorage.setItem('completedTasks', JSON.stringify([...this.completedTasks]));
-    localStorage.setItem('userUploads', JSON.stringify(this.userUploads));
-  }
-
-  loadSavedProgress() {
-    try {
-      const saved = localStorage.getItem('completedTasks');
-      if (saved) {
-        this.completedTasks = new Set(JSON.parse(saved));
-      }
-      
-      const uploads = localStorage.getItem('userUploads');
-      if (uploads) {
-        this.userUploads = JSON.parse(uploads);
-      }
-    } catch (e) {
-      console.error('Failed to load saved progress:', e);
+        let xp = 50; // default
+        task.labels?.forEach(label => {
+            if (rewards[label.name]) {
+                xp = Math.max(xp, rewards[label.name]);
+            }
+        });
+        return xp;
     }
-  }
 
-  open() {
-    document.getElementById('task-picker-container').style.display = 'flex';
-  }
+    suggestAssignment(task) {
+        const title = task.title.toLowerCase();
+        const body = (task.body || '').toLowerCase();
+        
+        // Jesse's keywords
+        const jesseKeywords = ['animation', 'rigging', 'character', 'maya', 'motion', 'bone', 'skin'];
+        // Michael's keywords
+        const michaelKeywords = ['model', 'texture', 'light', 'render', 'houdini', 'shader', 'material'];
+        
+        let jesseScore = 0;
+        let michaelScore = 0;
+        
+        jesseKeywords.forEach(keyword => {
+            if (title.includes(keyword) || body.includes(keyword)) jesseScore++;
+        });
+        
+        michaelKeywords.forEach(keyword => {
+            if (title.includes(keyword) || body.includes(keyword)) michaelScore++;
+        });
+        
+        if (jesseScore > michaelScore) return 'jesse';
+        if (michaelScore > jesseScore) return 'michael';
+        return null;
+    }
 
-  close() {
-    document.getElementById('task-picker-container').style.display = 'none';
-  }
+    open() {
+        document.getElementById('task-picker-modal').style.display = 'block';
+        this.loadTasks();
+    }
+
+    close() {
+        document.getElementById('task-picker-modal').style.display = 'none';
+    }
 }
 
-// Initialize when ready
-if (typeof window !== 'undefined') {
-  window.TaskPicker = TaskPicker;
+// Create global instance
+window.taskPicker = new TaskPicker();
+
+// Add styles
+const styles = `
+<style>
+.task-picker {
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
+
+.user-select {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.user-btn {
+    flex: 1;
+    padding: 1rem;
+    background: var(--stone-dark);
+    border: 2px solid var(--border-iron);
+    color: var(--pale-text);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.user-btn:hover, .user-btn.active {
+    border-color: var(--ember-glow);
+    background: var(--ash-black);
+}
+
+.user-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.task-filters {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.task-filters select {
+    flex: 1;
+    padding: 0.5rem;
+    background: var(--stone-dark);
+    border: 1px solid var(--border-iron);
+    color: var(--pale-text);
+}
+
+.task-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-iron);
+    padding: 1rem;
+    background: var(--ash-black);
+}
+
+.task-item {
+    background: var(--stone-dark);
+    border: 1px solid var(--border-iron);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.task-item:hover {
+    border-color: var(--ember-glow);
+}
+
+.task-item.recommended {
+    border-color: var(--soul-blue);
+    box-shadow: 0 0 10px rgba(65, 105, 225, 0.3);
+}
+
+.task-item.assigned-jesse {
+    border-left: 4px solid #9333EA;
+}
+
+.task-item.assigned-michael {
+    border-left: 4px solid #10B981;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.task-number {
+    color: var(--faded-text);
+    font-size: 0.9rem;
+}
+
+.task-xp {
+    color: var(--ember-glow);
+    font-weight: bold;
+}
+
+.recommended-badge {
+    background: var(--soul-blue);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.assigned-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ember-glow);
+    color: var(--blood-dark);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.task-title {
+    color: var(--pale-text);
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.task-labels {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+}
+
+.task-labels .label {
+    padding: 0.2rem 0.5rem;
+    background: var(--ash-black);
+    border: 1px solid var(--border-iron);
+    color: var(--faded-text);
+    font-size: 0.8rem;
+    border-radius: 3px;
+}
+
+.task-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.task-actions button, .task-actions a {
+    padding: 0.5rem 1rem;
+    background: var(--stone-dark);
+    border: 1px solid var(--border-iron);
+    color: var(--pale-text);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.task-actions button:hover, .task-actions a:hover {
+    background: var(--ember-glow);
+    color: var(--blood-dark);
+}
+
+.claim-success {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--success-green);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    font-weight: bold;
+    animation: fadeInOut 3s;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+</style>
+`;
+
+document.head.insertAdjacentHTML('beforeend', styles);
+
+export default TaskPicker;

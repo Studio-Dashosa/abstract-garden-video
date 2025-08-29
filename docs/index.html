@@ -375,6 +375,11 @@
         <div class="header">
             <h1>Abstract Garden</h1>
             <p class="subtitle">The Souls of Digital Creation</p>
+            <div id="start-journey" style="margin-top: 2rem;">
+                <button class="menu-item" onclick="startJourney()" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                    🔥 Begin Journey (with Audio)
+                </button>
+            </div>
         </div>
 
         <!-- Loading indicator -->
@@ -493,6 +498,7 @@
                     <button class="menu-item" id="vo-toggle">Voice: Silent</button>
                     <button class="menu-item" id="music-toggle">Ambience: Silent</button>
                     <button class="menu-item" id="story-mode">Read Chronicles</button>
+                    <button class="menu-item" onclick="openTaskPicker()">⚔️ Choose Quest</button>
                 </div>
             </div>
         </div>
@@ -514,6 +520,36 @@
     <!-- Audio elements -->
     <audio id="intro-narration" src="audio/intro-narration.mp3"></audio>
     <audio id="ambient-music" src="audio/dark-ambience.mp3" loop></audio>
+
+    <!-- Task Picker Modal -->
+    <div id="task-picker-modal" class="dark-sign-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <h2 style="color: var(--ember-glow); margin-bottom: 1rem;">⚔️ Choose Your Quest</h2>
+            
+            <!-- User Selection -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <button class="menu-item" onclick="selectUser('jesse')" style="flex: 1; text-align: center;">
+                    <div style="font-size: 2rem;">🎭</div>
+                    <div>Jesse</div>
+                    <small style="color: var(--faded-text);">Animation & Rigging</small>
+                </button>
+                <button class="menu-item" onclick="selectUser('michael')" style="flex: 1; text-align: center;">
+                    <div style="font-size: 2rem;">🏗️</div>
+                    <div>Michael</div>
+                    <small style="color: var(--faded-text);">Modeling & Rendering</small>
+                </button>
+            </div>
+
+            <!-- Task List -->
+            <div id="picker-task-list" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-iron); padding: 1rem; background: var(--ash-black);">
+                <!-- Tasks will be loaded here -->
+            </div>
+
+            <button class="menu-item" onclick="closeTaskPicker()" style="margin-top: 1rem;">
+                Close
+            </button>
+        </div>
+    </div>
 
     <script>
         // Global state
@@ -558,13 +594,6 @@
                 // Hide loading, show content
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                
-                // Auto-play intro narration after a short delay
-                setTimeout(() => {
-                    if (!audioState.introPlayed) {
-                        playIntroNarration();
-                    }
-                }, 2000);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -766,17 +795,22 @@
             document.getElementById('story-modal').style.display = 'none';
         }
 
-        function playIntroNarration() {
+        function startJourney() {
             const audio = document.getElementById('intro-narration');
             const music = document.getElementById('ambient-music');
             
             // Play intro narration
             audio.volume = 1.0;
-            audio.play().catch(e => console.log('Auto-play blocked:', e));
+            audio.play().then(() => {
+                console.log('Intro narration started');
+            }).catch(e => {
+                console.log('Audio play failed:', e);
+                alert('Please enable audio in your browser to hear the narration.');
+            });
             
             // Start ambient music at lower volume
             music.volume = 0.3;
-            music.play().catch(e => console.log('Music auto-play blocked:', e));
+            music.play().catch(e => console.log('Music play failed:', e));
             
             audioState.introPlayed = true;
             audioState.voEnabled = true;
@@ -787,6 +821,115 @@
             document.getElementById('vo-toggle').textContent = 'Voice: British Lady';
             document.getElementById('music-toggle').classList.add('active');
             document.getElementById('music-toggle').textContent = 'Ambience: Active';
+            
+            // Hide start button
+            document.getElementById('start-journey').style.display = 'none';
+        }
+
+        // Task picker functions
+        let currentUser = null;
+        let taskAssignments = JSON.parse(localStorage.getItem('taskAssignments') || '{}');
+
+        function openTaskPicker() {
+            document.getElementById('task-picker-modal').style.display = 'block';
+            loadPickerTasks();
+        }
+
+        function closeTaskPicker() {
+            document.getElementById('task-picker-modal').style.display = 'none';
+        }
+
+        function selectUser(user) {
+            currentUser = user;
+            document.querySelectorAll('#task-picker-modal .menu-item').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(user)) {
+                    btn.classList.add('active');
+                } else if (btn.textContent.includes('Jesse') || btn.textContent.includes('Michael')) {
+                    btn.classList.remove('active');
+                }
+            });
+            loadPickerTasks();
+        }
+
+        function loadPickerTasks() {
+            const listEl = document.getElementById('picker-task-list');
+            const openTasks = issues.filter(issue => 
+                issue.state === 'open' && 
+                !issue.pull_request &&
+                !issue.labels?.some(l => l.name === 'dashboard')
+            );
+
+            if (openTasks.length === 0) {
+                listEl.innerHTML = '<p style="text-align: center; color: var(--faded-text);">No open tasks available</p>';
+                return;
+            }
+
+            const html = openTasks.map(task => {
+                const rewards = calculateRewards(task);
+                const assignment = taskAssignments[task.number];
+                const suggestion = suggestTaskAssignment(task);
+                const isRecommended = currentUser && suggestion === currentUser;
+                
+                return `
+                    <div style="background: var(--stone-dark); border: 1px solid ${isRecommended ? 'var(--soul-blue)' : 'var(--border-iron)'}; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--faded-text);">#${task.number}</span>
+                            <span style="color: var(--ember-glow); font-weight: bold;">+${rewards.xp} XP</span>
+                        </div>
+                        <h3 style="color: var(--pale-text); margin: 0.5rem 0;">${task.title}</h3>
+                        ${isRecommended ? '<p style="color: var(--soul-blue); font-size: 0.9rem;">⭐ Recommended for you</p>' : ''}
+                        ${assignment ? `<p style="color: var(--ember-glow); font-size: 0.9rem;">Claimed by ${assignment}</p>` : ''}
+                        <div style="margin-top: 1rem;">
+                            ${!assignment ? `<button class="menu-item" onclick="claimTask(${task.number})" style="padding: 0.5rem 1rem;">Claim Task</button>` : ''}
+                            <a href="${task.html_url}" target="_blank" class="menu-item" style="padding: 0.5rem 1rem; margin-left: 0.5rem; text-decoration: none; display: inline-block;">View on GitHub</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            listEl.innerHTML = html;
+        }
+
+        function suggestTaskAssignment(task) {
+            const title = task.title.toLowerCase();
+            const body = (task.body || '').toLowerCase();
+            
+            // Jesse's keywords
+            const jesseKeywords = ['animation', 'rigging', 'character', 'maya', 'motion', 'bone', 'skin', 'golaem', 'crowd'];
+            // Michael's keywords  
+            const michaelKeywords = ['model', 'texture', 'light', 'render', 'houdini', 'shader', 'material', 'solidworks', 'revit'];
+            
+            let jesseScore = 0;
+            let michaelScore = 0;
+            
+            jesseKeywords.forEach(keyword => {
+                if (title.includes(keyword) || body.includes(keyword)) jesseScore++;
+            });
+            
+            michaelKeywords.forEach(keyword => {
+                if (title.includes(keyword) || body.includes(keyword)) michaelScore++;
+            });
+            
+            // Check sprint labels
+            if (task.labels?.some(l => l.name === 'Sprint 2')) jesseScore += 2; // Animation sprint
+            if (task.labels?.some(l => l.name === 'Sprint 1' || l.name === 'Sprint 3')) michaelScore += 1;
+            
+            if (jesseScore > michaelScore) return 'jesse';
+            if (michaelScore > jesseScore) return 'michael';
+            return null;
+        }
+
+        function claimTask(issueNumber) {
+            if (!currentUser) {
+                alert('Please select who you are (Jesse or Michael) first!');
+                return;
+            }
+
+            taskAssignments[issueNumber] = currentUser;
+            localStorage.setItem('taskAssignments', JSON.stringify(taskAssignments));
+            
+            alert(`Task #${issueNumber} claimed by ${currentUser}!`);
+            loadPickerTasks();
         }
 
         function setupEventHandlers() {
