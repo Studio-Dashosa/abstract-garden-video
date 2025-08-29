@@ -10,11 +10,17 @@ class TaskPicker {
     this.issuesData = [];
     this.completedTasks = new Set();
     this.userUploads = {};
+    this.sprintEnforcer = null;
     
     this.init();
   }
 
   async init() {
+    // Initialize sprint enforcer
+    if (window.SprintEnforcer) {
+      this.sprintEnforcer = new window.SprintEnforcer();
+    }
+    
     await this.loadIssues();
     this.createUI();
     this.attachEventListeners();
@@ -109,7 +115,9 @@ class TaskPicker {
     
     grid.innerHTML = filteredTasks.map(task => {
       const isCompleted = task.state === 'closed' || this.completedTasks.has(task.number);
-      const isLocked = this.isTaskLocked(task);
+      const availability = this.sprintEnforcer ? this.sprintEnforcer.isTaskAvailable(task.number) : { available: true };
+      const isLocked = !availability.available;
+      const lockReason = availability.reason || '';
       const difficultyColor = window.DIFFICULTY_COLORS[task.difficulty] || '#666';
       
       return `
@@ -127,7 +135,7 @@ class TaskPicker {
             <span class="value">${task.value}</span>
           </div>
           ${isCompleted ? '<div class="task-status">✓ Completed</div>' : ''}
-          ${isLocked ? '<div class="task-status">🔒 Locked</div>' : ''}
+          ${isLocked ? `<div class="task-status" title="${lockReason}">🔒 ${lockReason}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -147,7 +155,12 @@ class TaskPicker {
         filtered = filtered.filter(t => t.labels.some(l => l.name === 'Sprint 3'));
         break;
       case 'available':
-        filtered = filtered.filter(t => !this.isTaskLocked(t) && t.state === 'open');
+        if (this.sprintEnforcer) {
+          const availableIds = this.sprintEnforcer.getAvailableTasks().map(t => t.id);
+          filtered = filtered.filter(t => availableIds.includes(t.number));
+        } else {
+          filtered = filtered.filter(t => !this.isTaskLocked(t) && t.state === 'open');
+        }
         break;
     }
     
@@ -156,8 +169,12 @@ class TaskPicker {
   }
 
   isTaskLocked(task) {
-    // Sprint 2 locked until 5 Sprint 1 tasks complete
-    // Sprint 3 locked until 10 Sprint 2 tasks complete
+    if (this.sprintEnforcer) {
+      const availability = this.sprintEnforcer.isTaskAvailable(task.number);
+      return !availability.available;
+    }
+    
+    // Fallback to simple sprint logic
     const sprint1Complete = this.getCompletedByLabel('Sprint 1').length;
     const sprint2Complete = this.getCompletedByLabel('Sprint 2').length;
     
@@ -247,6 +264,19 @@ class TaskPicker {
     
     const notes = document.querySelector('.completion-notes').value;
     const taskId = this.selectedTask.number;
+    
+    // Mark as completed through sprint enforcer
+    if (this.sprintEnforcer) {
+      try {
+        const result = this.sprintEnforcer.completeTask(taskId);
+        if (result.nextTask) {
+          console.log('Next recommended task:', result.nextTask.name);
+        }
+      } catch (error) {
+        alert(`Cannot complete task: ${error.message}`);
+        return;
+      }
+    }
     
     // Mark as completed
     this.completedTasks.add(taskId);
