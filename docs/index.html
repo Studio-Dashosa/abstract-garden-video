@@ -377,7 +377,7 @@
             <p class="subtitle">The Souls of Digital Creation</p>
             <div id="start-journey" style="margin-top: 2rem;">
                 <button class="menu-item" onclick="startJourney()" style="font-size: 1.2rem; padding: 1rem 2rem;">
-                    🔥 Begin Journey (with Audio)
+                    Begin Journey
                 </button>
             </div>
         </div>
@@ -498,7 +498,7 @@
                     <button class="menu-item" id="vo-toggle">Voice: Silent</button>
                     <button class="menu-item" id="music-toggle">Ambience: Silent</button>
                     <button class="menu-item" id="story-mode">Read Chronicles</button>
-                    <button class="menu-item" onclick="openTaskPicker()">⚔️ Choose Quest</button>
+                    <button class="menu-item" onclick="openTaskPicker()">Choose Quest</button>
                 </div>
             </div>
         </div>
@@ -524,17 +524,17 @@
     <!-- Task Picker Modal -->
     <div id="task-picker-modal" class="dark-sign-modal" style="display: none;">
         <div class="modal-content" style="max-width: 900px;">
-            <h2 style="color: var(--ember-glow); margin-bottom: 1rem;">⚔️ Choose Your Quest</h2>
+            <h2 style="color: var(--ember-glow); margin-bottom: 1rem;">Choose Your Quest</h2>
             
             <!-- User Selection -->
             <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
                 <button class="menu-item" onclick="selectUser('jesse')" style="flex: 1; text-align: center;">
-                    <div style="font-size: 2rem;">🎭</div>
+                    <div style="font-size: 2rem;">J</div>
                     <div>Jesse</div>
                     <small style="color: var(--faded-text);">Animation & Rigging</small>
                 </button>
                 <button class="menu-item" onclick="selectUser('michael')" style="flex: 1; text-align: center;">
-                    <div style="font-size: 2rem;">🏗️</div>
+                    <div style="font-size: 2rem;">M</div>
                     <div>Michael</div>
                     <small style="color: var(--faded-text);">Modeling & Rendering</small>
                 </button>
@@ -551,6 +551,7 @@
         </div>
     </div>
 
+    <script src="js/real-task-values.js"></script>
     <script src="js/task-values.js"></script>
     <script>
         // Global state
@@ -627,15 +628,12 @@
                 const rewards = calculateRewards(issue);
                 totalXP += rewards.xp;
                 totalCoins += rewards.coins;
-                portfolioValue += rewards.value;
             });
             
-            // Add completion bonuses
-            const completionRate = closedIssues.length / realIssues.length;
-            if (completionRate >= 0.25) portfolioValue += 500;  // 25% bonus
-            if (completionRate >= 0.50) portfolioValue += 1000; // 50% bonus
-            if (completionRate >= 0.75) portfolioValue += 2000; // 75% bonus
-            if (completionRate >= 1.00) portfolioValue += 5000; // 100% completion master bonus
+            // Calculate portfolio value properly
+            const closedNumbers = closedIssues.map(i => i.number);
+            const portfolio = calculatePortfolioValue(closedNumbers);
+            portfolioValue = portfolio.total;
             
             // Calculate level from XP
             const level = Math.floor(Math.sqrt(totalXP / 100)) + 1;
@@ -790,18 +788,19 @@
             const audio = document.getElementById('intro-narration');
             const music = document.getElementById('ambient-music');
             
-            // Play intro narration
+            // Start both simultaneously
             audio.volume = 1.0;
-            audio.play().then(() => {
-                console.log('Intro narration started');
+            music.volume = 0.3;
+            
+            Promise.all([
+                audio.play(),
+                music.play()
+            ]).then(() => {
+                console.log('Audio started');
             }).catch(e => {
                 console.log('Audio play failed:', e);
                 alert('Please enable audio in your browser to hear the narration.');
             });
-            
-            // Start ambient music at lower volume
-            music.volume = 0.3;
-            music.play().catch(e => console.log('Music play failed:', e));
             
             audioState.introPlayed = true;
             audioState.voEnabled = true;
@@ -809,7 +808,7 @@
             
             // Update UI
             document.getElementById('vo-toggle').classList.add('active');
-            document.getElementById('vo-toggle').textContent = 'Voice: British Lady';
+            document.getElementById('vo-toggle').textContent = 'Voice: Active';
             document.getElementById('music-toggle').classList.add('active');
             document.getElementById('music-toggle').textContent = 'Ambience: Active';
             
@@ -887,10 +886,10 @@
                         <h3 style="color: var(--pale-text); margin: 0.5rem 0;">${task.title}</h3>
                         <div style="display: flex; gap: 1rem; margin: 0.5rem 0; font-size: 0.85rem;">
                             <span style="color: ${complexityColor};">${complexity.toUpperCase()}</span>
-                            <span style="color: var(--faded-text);">⏰ ${time}</span>
-                            <span style="color: var(--faded-text);">🔧 ${skill}</span>
+                            <span style="color: var(--faded-text);">Time: ${time}</span>
+                            <span style="color: var(--faded-text);">Skill: ${skill}</span>
                         </div>
-                        ${isRecommended ? '<p style="color: var(--soul-blue); font-size: 0.9rem;">⭐ Recommended for you</p>' : ''}
+                        ${isRecommended ? '<p style="color: var(--soul-blue); font-size: 0.9rem;">Recommended for you</p>' : ''}
                         ${assignment ? `<p style="color: var(--ember-glow); font-size: 0.9rem;">Claimed by ${assignment}</p>` : ''}
                         <div style="margin-top: 1rem;">
                             ${!assignment ? `<button class="menu-item" onclick="claimTask(${task.number})" style="padding: 0.5rem 1rem;">Claim Task</button>` : ''}
