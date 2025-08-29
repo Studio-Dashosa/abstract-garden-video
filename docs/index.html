@@ -3,25 +3,982 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abstract Garden - Dark Souls Style Dashboard</title>
+    <title>Abstract Garden - Souls of Creation</title>
     <style>
-        /* Include all the styles from the artifact */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Text:ital@0;1&family=JetBrains+Mono:wght@300;400&display=swap');
+        
+        /* FromSoft Dark Theme - No gradients, pure darkness */
         :root {
-            --blood-dark: #0a0a0a;
-            --ash-black: #1a1a1a;
-            --iron-gray: #2a2a2a;
-            --pale-text: #c0c0c0;
-            --faded-text: #808080;
-            --ember-glow: #ff6b35;
-            --soul-blue: #4a90e2;
-            --poison-green: #76b041;
-            --border-iron: #3a3a3a;
-            --bonfire-gold: #ffa500;
+            --blood-dark: #0A0806;
+            --ash-black: #141210;
+            --stone-dark: #1C1A17;
+            --ember-glow: #B8860B;
+            --blood-red: #8B0000;
+            --soul-blue: #4169E1;
+            --pale-text: #C4B5A0;
+            --faded-text: #8B8378;
+            --border-iron: #3A3532;
+            --success-green: #2F4F2F;
         }
-        /* ... rest of styles ... */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: var(--blood-dark);
+            color: var(--pale-text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Subtle fog effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" opacity="0.03" width="1" height="1" x="50" y="50"/></svg>');
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Header - FromSoft Title Style */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-iron);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--ember-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: var(--faded-text);
+            font-size: 1.1rem;
+            letter-spacing: 0.1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            color: var(--faded-text);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 300;
+        }
+
+        /* Currency Bar - Souls Style */
+        .souls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
+        }
+
+        .soul-counter {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .soul-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .soul-value {
+            font-size: 1.25rem;
+            color: var(--pale-text);
+            font-weight: 400;
+        }
+
+        /* Stats Grid - Minimal Dark Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            padding: 1.5rem;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--ember-glow);
+        }
+
+        .stat-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            color: var(--faded-text);
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            color: var(--ember-glow);
+            font-weight: 300;
+        }
+
+        .stat-subtitle {
+            font-size: 0.85rem;
+            color: var(--faded-text);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        /* Progress Section - Estus Flask Style */
+        .estus-progress {
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            color: var(--pale-text);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--blood-dark);
+            border: 1px solid var(--border-iron);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--ember-glow);
+            transition: width 1s ease;
+            box-shadow: 0 0 10px var(--ember-glow);
+        }
+
+        .progress-message {
+            margin-top: 1rem;
+            color: var(--faded-text);
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Sprint Cards - Bonfire Style */
+        .bonfire-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .bonfire-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .bonfire-card.lit {
+            border-color: var(--ember-glow);
+            box-shadow: inset 0 0 20px rgba(184, 134, 11, 0.1);
+        }
+
+        .bonfire-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .bonfire-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--pale-text);
+        }
+
+        .bonfire-progress {
+            height: 4px;
+            background: var(--blood-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .bonfire-flame {
+            height: 100%;
+            background: var(--ember-glow);
+            transition: width 0.6s;
+        }
+
+        /* Memory Grid - Soul Fragment Style */
+        .memory-chamber {
+            background: var(--ash-black);
+            border: 1px solid var(--border-iron);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .soul-fragment {
+            aspect-ratio: 1;
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--faded-text);
+        }
+
+        .soul-fragment.obtained {
+            background: var(--ember-glow);
+            color: var(--blood-dark);
+            border-color: var(--ember-glow);
+            box-shadow: 0 0 10px rgba(184, 134, 11, 0.5);
+        }
+
+        .soul-fragment:hover {
+            transform: scale(1.1);
+            border-color: var(--ember-glow);
+        }
+
+        /* Audio Controls - Item Menu Style */
+        .item-menu {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .menu-item {
+            padding: 0.75rem 1.5rem;
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            color: var(--pale-text);
+            font-family: 'Crimson Text', serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            background: var(--ash-black);
+            border-color: var(--ember-glow);
+        }
+
+        .menu-item.active {
+            background: var(--ember-glow);
+            color: var(--blood-dark);
+        }
+
+        /* Story Panels - Covenant Style */
+        .covenant-section {
+            margin-top: 2rem;
+        }
+
+        .covenant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .covenant-card {
+            background: var(--stone-dark);
+            border: 1px solid var(--border-iron);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .covenant-card.joined {
+            border-color: var(--soul-blue);
+            box-shadow: inset 0 0 20px rgba(65, 105, 225, 0.1);
+        }
+
+        .covenant-card:hover {
+            border-color: var(--ember-glow);
+        }
+
+        .covenant-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--pale-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .covenant-progress {
+            font-size: 0.9rem;
+            color: var(--faded-text);
+        }
+
+        /* Modal - Dark Sign Style */
+        .dark-sign-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 8, 6, 0.95);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--stone-dark);
+            border: 2px solid var(--border-iron);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--ember-glow);
+            margin-bottom: 1rem;
+        }
+
+        .modal-text {
+            color: var(--pale-text);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: var(--blood-red);
+            color: var(--pale-text);
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid darkred;
+            text-align: center;
+        }
+
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 1rem;
+            color: var(--faded-text);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .bonfire-grid { grid-template-columns: 1fr; }
+            .memory-grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
+        }
     </style>
 </head>
 <body>
-    <!-- Dashboard HTML from artifact -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Abstract Garden</h1>
+            <p class="subtitle">The Souls of Digital Creation</p>
+            <div class="badge">BEARER OF THE RENDER • SEEK THE FORGOTTEN STORIES</div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading">Communing with the GitHub spirits...</div>
+
+        <!-- Soul Counter -->
+        <div class="souls-bar" style="display: none;" id="souls-bar">
+            <div class="soul-counter">
+                <span class="soul-icon">✦</span>
+                <span class="soul-value" id="xp-display">0 SOULS</span>
+            </div>
+            <div class="soul-counter">
+                <span class="soul-icon">◈</span>
+                <span class="soul-value" id="coins-display">0 EMBERS</span>
+            </div>
+        </div>
+
+        <!-- Main Stats -->
+        <div class="stats-grid" id="stats-grid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Portfolio Worth</div>
+                <div class="stat-value" id="portfolio-value">$0</div>
+                <div class="stat-subtitle">The weight of thy creations</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Monthly Tithe</div>
+                <div class="stat-value" id="monthly-income">$0</div>
+                <div class="stat-subtitle">Passive souls gathered</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Soul Level</div>
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-subtitle" id="level-title">Hollow</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Tasks Vanquished</div>
+                <div class="stat-value" id="tasks-complete">0/78</div>
+                <div class="stat-subtitle">Issues laid to rest</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="estus-progress" id="progress-section" style="display: none;">
+            <div class="progress-header">
+                <div class="progress-title">Journey Progress</div>
+                <div id="progress-percentage">0%</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="main-progress" style="width: 0%"></div>
+            </div>
+            <div class="progress-message" id="progress-message">
+                Thou art yet to begin thy journey, Hollow one...
+            </div>
+        </div>
+
+        <!-- Sprint Bonfires -->
+        <div class="bonfire-grid" id="bonfire-grid" style="display: none;">
+            <div class="bonfire-card" id="sprint-1">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">First Flame</div>
+                    <div>0%</div>
+                </div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle">Foundation • 8 trials</div>
+            </div>
+            
+            <div class="bonfire-card" id="sprint-2">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Kiln of Skills</div>
+                    <div>0%</div>
+                </div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle">Core mastery • 28 trials</div>
+            </div>
+            
+            <div class="bonfire-card" id="sprint-3">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Throne of Want</div>
+                    <div>0%</div>
+                </div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle">Advanced arts • 20 trials</div>
+            </div>
+            
+            <div class="bonfire-card" id="side-quests">
+                <div class="bonfire-header">
+                    <div class="bonfire-title">Hidden Paths</div>
+                    <div id="side-quest-percent">0%</div>
+                </div>
+                <div class="bonfire-progress">
+                    <div class="bonfire-flame" id="side-quest-flame" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="side-quest-subtitle">Side quests • 0/18 found</div>
+            </div>
+        </div>
+
+        <!-- Memory Chamber -->
+        <div class="memory-chamber" id="memory-chamber" style="display: none;">
+            <div class="progress-header">
+                <div class="progress-title">Memory Fragments</div>
+                <div><span id="memories-unlocked">0</span>/49 recovered</div>
+            </div>
+            <div class="memory-grid" id="memory-grid">
+                <!-- Generated by JS -->
+            </div>
+            <div class="item-menu">
+                <button class="menu-item" id="vo-toggle">Voice: Silent</button>
+                <button class="menu-item" id="music-toggle">Ambience: Silent</button>
+                <button class="menu-item" id="story-mode">Read Chronicles</button>
+            </div>
+        </div>
+
+        <!-- Covenant Stories -->
+        <div class="covenant-section" id="covenant-section" style="display: none;">
+            <div class="progress-title" style="margin-bottom: 1rem;">Hidden Covenants</div>
+            <div class="covenant-grid" id="covenant-grid">
+                <div class="covenant-card" id="covenant-women">
+                    <div class="covenant-name">The Forgotten Women</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
+                </div>
+                <div class="covenant-card" id="covenant-eastern">
+                    <div class="covenant-name">The Eastern Masters</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
+                </div>
+                <div class="covenant-card" id="covenant-opensource">
+                    <div class="covenant-name">The Open Source Heroes</div>
+                    <div class="covenant-progress">0/6 trials complete</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Sign Modal -->
+    <div class="dark-sign-modal" id="story-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="story-title">Memory Fragment</div>
+            <div class="modal-text" id="story-content">
+                The echoes of forgotten knowledge whisper through the digital void...
+            </div>
+            <button class="menu-item" onclick="closeModal()">
+                Return to the Waking World
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts load in correct order -->
+    <script src="js/memory-fragments.js"></script>
+    <script src="js/audio-system.js"></script>
+    
+    <script>
+        // Global state
+        let issues = [];
+        let completedTasks = 0;
+        let totalTasks = 96; // 78 main + 18 side quests
+        let mainTasks = 78;
+        let sideQuests = 18;
+        let audioSystem = null;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Initializing Abstract Garden dashboard...');
+            
+            // Initialize audio system
+            try {
+                audioSystem = new AudioSystem();
+                window.audioSystem = audioSystem;
+                console.log('Audio system initialized');
+            } catch (e) {
+                console.error('Failed to init audio:', e);
+            }
+            
+            // Load data
+            loadData();
+            
+            // Set up event handlers
+            setupEventHandlers();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadData, 5 * 60 * 1000);
+        });
+        
+        async function loadData() {
+            try {
+                const repo = 'Studio-Dashosa/abstract-garden-video';
+                
+                // Try local data first
+                try {
+                    const local = await fetch('./data/issues.json', { cache: 'no-store' });
+                    if (local.ok) {
+                        issues = await local.json();
+                        console.log(`Loaded ${issues.length} issues from local cache`);
+                    } else {
+                        throw new Error('No local data');
+                    }
+                } catch (_) {
+                    // Fallback to GitHub API
+                    console.log('Fetching from GitHub API...');
+                    const issuesResponse = await fetch(
+                        `https://api.github.com/repos/${repo}/issues?state=all&per_page=100`,
+                        { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+                    );
+                    
+                    if (!issuesResponse.ok) {
+                        throw new Error(`GitHub API Error: ${issuesResponse.status}`);
+                    }
+                    issues = await issuesResponse.json();
+                    console.log(`Loaded ${issues.length} issues from GitHub`);
+                }
+
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('souls-bar').style.display = 'flex';
+                document.getElementById('stats-grid').style.display = 'grid';
+                document.getElementById('progress-section').style.display = 'block';
+                document.getElementById('bonfire-grid').style.display = 'grid';
+                document.getElementById('memory-chamber').style.display = 'block';
+                document.getElementById('covenant-section').style.display = 'block';
+                
+                updateDashboard();
+                generateMemoryGrid();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error-message">Failed to commune with the GitHub spirits: ${error.message}</div>`;
+            }
+        }
+
+        function updateDashboard() {
+            if (!issues.length) return;
+
+            // Filter real issues (no pull requests)
+            const realIssues = issues.filter(issue => !issue.pull_request);
+            const closedIssues = realIssues.filter(issue => issue.state === 'closed');
+            
+            // Count side quests (issues with 'side-quest' label)
+            const sideQuestIssues = realIssues.filter(issue => 
+                issue.labels && issue.labels.some(label => label.name === 'side-quest')
+            );
+            const completedSideQuests = sideQuestIssues.filter(issue => issue.state === 'closed');
+            
+            // Calculate totals
+            const mainIssues = realIssues.filter(issue => 
+                !issue.labels || !issue.labels.some(label => label.name === 'side-quest')
+            );
+            const completedMainTasks = mainIssues.filter(issue => issue.state === 'closed').length;
+            
+            completedTasks = closedIssues.length;
+            totalTasks = realIssues.length;
+            
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            // Calculate values
+            const portfolioValue = calculatePortfolioValue(completedTasks);
+            const monthlyIncome = Math.round(portfolioValue * 0.2);
+            const xp = completedTasks * 100;
+            const level = calculateLevel(xp);
+            
+            // Update DOM
+            document.getElementById('portfolio-value').textContent = `$${portfolioValue.toLocaleString()}`;
+            document.getElementById('monthly-income').textContent = `$${monthlyIncome}`;
+            document.getElementById('tasks-complete').textContent = `${completedTasks}/${totalTasks}`;
+            document.getElementById('progress-percentage').textContent = `${progress}%`;
+            document.getElementById('main-progress').style.width = `${progress}%`;
+            document.getElementById('level').textContent = level;
+            document.getElementById('level-title').textContent = getSoulTitle(level);
+            document.getElementById('xp-display').textContent = `${xp} SOULS`;
+            document.getElementById('coins-display').textContent = `${completedTasks * 75} EMBERS`;
+            
+            // Update side quest display
+            const sideQuestPercent = sideQuestIssues.length > 0 
+                ? Math.round((completedSideQuests.length / sideQuestIssues.length) * 100) 
+                : 0;
+            document.getElementById('side-quest-percent').textContent = `${sideQuestPercent}%`;
+            document.getElementById('side-quest-flame').style.width = `${sideQuestPercent}%`;
+            document.getElementById('side-quest-subtitle').textContent = 
+                `Side quests • ${completedSideQuests.length}/${sideQuestIssues.length} found`;
+            
+            // Update progress message
+            const messages = [
+                "Thou art yet to begin thy journey, Hollow one...",
+                "The First Flame flickers. Thy path begins to reveal itself...",
+                "Souls gathered. The ancient knowledge stirs within thee...",
+                "The machine spirits acknowledge thy dedication, Bearer of the Render...",
+                "Halfway through thy trials. The digital realm bends to thy will...",
+                "Mastery approaches. Soon thou shalt transcend mortality...",
+                "Near the throne. The cycle nears completion...",
+                "Thou hast linked the Fire. The Age of Dark is forestalled..."
+            ];
+            
+            const messageIndex = Math.min(Math.floor(progress / 12.5), messages.length - 1);
+            document.getElementById('progress-message').textContent = messages[messageIndex];
+            
+            updateSprintProgress(closedIssues);
+            updateCovenants(sideQuestIssues, completedSideQuests);
+        }
+
+        function calculatePortfolioValue(completed) {
+            const baseValue = completed * 150;
+            const levelBonus = Math.floor(completed / 10) * 500;
+            const masterworkBonus = completed >= totalTasks ? 15000 : 0;
+            return baseValue + levelBonus + masterworkBonus;
+        }
+
+        function calculateLevel(xp) {
+            return Math.floor(Math.sqrt(xp / 100)) + 1;
+        }
+
+        function getSoulTitle(level) {
+            const titles = [
+                'Hollow', 'Unkindled', 'Bearer of the Curse', 'Ashen One',
+                'Seeker of Fire', 'Keeper of Embers', 'Digital Wanderer',
+                'Code Weaver', 'Render Knight', 'Shader Sorcerer',
+                'Lord of Cinder', 'Transcendent', 'Eternal Fragment'
+            ];
+            return titles[Math.min(level - 1, titles.length - 1)];
+        }
+
+        function updateSprintProgress(closedIssues) {
+            let sprint1Count = 0, sprint2Count = 0, sprint3Count = 0;
+            
+            closedIssues.forEach(issue => {
+                // Check labels first
+                if (issue.labels && issue.labels.some(label => label.name === 'Sprint 1')) {
+                    sprint1Count++;
+                } else if (issue.labels && issue.labels.some(label => label.name === 'Sprint 2')) {
+                    sprint2Count++;
+                } else if (issue.labels && issue.labels.some(label => label.name === 'Sprint 3')) {
+                    sprint3Count++;
+                } else {
+                    // Fallback to issue number ranges
+                    if (issue.number >= 70 && issue.number <= 77) sprint1Count++;
+                    else if (issue.number >= 42 && issue.number <= 69) sprint2Count++;
+                    else if (issue.number >= 22 && issue.number <= 41) sprint3Count++;
+                }
+            });
+            
+            updateBonfire('sprint-1', sprint1Count, 8);
+            updateBonfire('sprint-2', sprint2Count, 28);
+            updateBonfire('sprint-3', sprint3Count, 20);
+        }
+
+        function updateBonfire(id, completed, total) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            
+            const percent = Math.round((completed / total) * 100);
+            const percentEl = element.querySelector('.bonfire-header > div:nth-child(2)');
+            if (percentEl) percentEl.textContent = `${percent}%`;
+            
+            const flameEl = element.querySelector('.bonfire-flame');
+            if (flameEl) flameEl.style.width = `${percent}%`;
+            
+            if (percent === 100) {
+                element.classList.add('lit');
+            }
+        }
+
+        function updateCovenants(sideQuestIssues, completedSideQuests) {
+            // Count by covenant type
+            let womenComplete = 0, womenTotal = 0;
+            let easternComplete = 0, easternTotal = 0;
+            let opensourceComplete = 0, opensourceTotal = 0;
+            
+            sideQuestIssues.forEach(issue => {
+                const labels = issue.labels.map(l => l.name);
+                
+                if (labels.includes('forgotten-women')) {
+                    womenTotal++;
+                    if (issue.state === 'closed') womenComplete++;
+                } else if (labels.includes('eastern-masters')) {
+                    easternTotal++;
+                    if (issue.state === 'closed') easternComplete++;
+                } else if (labels.includes('open-source')) {
+                    opensourceTotal++;
+                    if (issue.state === 'closed') opensourceComplete++;
+                }
+            });
+            
+            // Update covenant displays
+            const womenCard = document.getElementById('covenant-women');
+            if (womenCard) {
+                womenCard.querySelector('.covenant-progress').textContent = 
+                    `${womenComplete}/${womenTotal || 6} trials complete`;
+                if (womenComplete === 6) womenCard.classList.add('joined');
+            }
+            
+            const easternCard = document.getElementById('covenant-eastern');
+            if (easternCard) {
+                easternCard.querySelector('.covenant-progress').textContent = 
+                    `${easternComplete}/${easternTotal || 6} trials complete`;
+                if (easternComplete === 6) easternCard.classList.add('joined');
+            }
+            
+            const opensourceCard = document.getElementById('covenant-opensource');
+            if (opensourceCard) {
+                opensourceCard.querySelector('.covenant-progress').textContent = 
+                    `${opensourceComplete}/${opensourceTotal || 6} trials complete`;
+                if (opensourceComplete === 6) opensourceCard.classList.add('joined');
+            }
+        }
+
+        function generateMemoryGrid() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            
+            for (let i = 1; i <= 49; i++) {
+                const fragment = document.createElement('div');
+                fragment.className = 'soul-fragment';
+                fragment.dataset.memoryId = i;
+                fragment.textContent = i;
+                
+                if (i <= completedTasks) {
+                    fragment.classList.add('obtained');
+                    fragment.addEventListener('click', () => showMemory(i));
+                }
+                
+                grid.appendChild(fragment);
+            }
+            
+            document.getElementById('memories-unlocked').textContent = Math.min(completedTasks, 49);
+        }
+
+        function showMemory(id) {
+            const modal = document.getElementById('story-modal');
+            const memory = window.memoryFragments ? window.memoryFragments[id - 1] : null;
+            
+            if (memory) {
+                document.getElementById('story-title').textContent = memory.title;
+                document.getElementById('story-content').textContent = memory.text;
+                
+                // Play narration if enabled
+                if (window.audioSystem && window.audioSystem.voEnabled) {
+                    window.audioSystem.playMemoryNarration(memory.text, id);
+                }
+                
+                // Award souls and embers (would be tracked in game state)
+                console.log(`Memory ${id} unlocked: +${memory.souls} souls, +${memory.embers} embers`);
+            } else {
+                document.getElementById('story-title').textContent = `Memory Fragment ${id}`;
+                document.getElementById('story-content').textContent = 
+                    `The echoes of creation whisper: Fragment ${id} reveals the ancient knowledge of the digital realm...`;
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('story-modal').style.display = 'none';
+            if (audioSystem) audioSystem.stopNarration();
+        }
+
+        function setupEventHandlers() {
+            // Audio controls
+            document.getElementById('vo-toggle').addEventListener('click', function() {
+                if (!audioSystem) return;
+                const enabled = audioSystem.toggleVO();
+                this.classList.toggle('active', enabled);
+                this.textContent = enabled ? 'Voice: British Lady' : 'Voice: Silent';
+            });
+            
+            document.getElementById('music-toggle').addEventListener('click', function() {
+                if (!audioSystem) return;
+                const enabled = audioSystem.toggleMusic();
+                this.classList.toggle('active', enabled);
+                this.textContent = enabled ? 'Ambience: Active' : 'Ambience: Silent';
+            });
+            
+            // Story mode button - Read all chronicles
+            document.getElementById('story-mode').addEventListener('click', function() {
+                // Open chronicles viewer
+                const modal = document.getElementById('story-modal');
+                const allMemories = [];
+                
+                // Collect all unlocked memories
+                for (let i = 1; i <= completedTasks && i <= 49; i++) {
+                    if (window.memoryFragments && window.memoryFragments[i - 1]) {
+                        allMemories.push(window.memoryFragments[i - 1]);
+                    }
+                }
+                
+                if (allMemories.length === 0) {
+                    document.getElementById('story-title').textContent = 'No Chronicles Yet';
+                    document.getElementById('story-content').innerHTML = 
+                        'Complete tasks to unlock memory fragments and reveal the chronicles of digital creation...';
+                } else {
+                    // Create chronicle view
+                    document.getElementById('story-title').textContent = `Chronicles of the Abstract Garden`;
+                    let chronicleHTML = `<div style="max-height: 60vh; overflow-y: auto;">`;
+                    chronicleHTML += `<p style="margin-bottom: 1rem; color: var(--faded-text);">You have unlocked ${allMemories.length} of 49 memories...</p>`;
+                    
+                    allMemories.forEach((memory, index) => {
+                        chronicleHTML += `
+                            <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-iron);">
+                                <h3 style="color: var(--ember-glow); margin-bottom: 0.5rem;">
+                                    ${index + 1}. ${memory.title}
+                                </h3>
+                                <p style="color: var(--pale-text); line-height: 1.6;">
+                                    ${memory.text}
+                                </p>
+                                <div style="margin-top: 0.5rem; color: var(--faded-text); font-size: 0.85rem;">
+                                    +${memory.souls || 50} souls • +${memory.embers || 25} embers
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    chronicleHTML += `</div>`;
+                    document.getElementById('story-content').innerHTML = chronicleHTML;
+                    
+                    // Auto-narrate if voice is enabled
+                    if (window.audioSystem && window.audioSystem.voEnabled) {
+                        window.audioSystem.playChronicleNarration(allMemories);
+                    }
+                }
+                
+                modal.style.display = 'block';
+            });
+            
+            // Covenant cards
+            document.querySelectorAll('.covenant-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const name = this.querySelector('.covenant-name').textContent;
+                    showMemory(0); // Show placeholder for now
+                    document.getElementById('story-title').textContent = name;
+                    document.getElementById('story-content').textContent = 
+                        `The covenant of ${name} awaits. Complete their trials to unlock their forgotten knowledge...`;
+                });
+            });
+            
+            // Close modal on background click
+            document.getElementById('story-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
