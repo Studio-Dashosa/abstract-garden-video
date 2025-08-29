@@ -7,6 +7,7 @@ class AudioSystem {
         this.ambientAudio = null;
         this.storyAudio = null;
         this.voiceAudio = null;
+        this.introAudio = null;
         this.isInitialized = false;
         this.hasPlayedOpening = false;
         this.voicesLoaded = false;
@@ -26,10 +27,14 @@ class AudioSystem {
     }
     
     async init() {
+        // Create intro speech audio element
+        this.introAudio = new Audio('audio/intro/british_intro.mp3');
+        this.introAudio.volume = 0.9;
+        
         // Create ambient audio element with REAL file
         this.ambientAudio = new Audio('audio/ambient music for dashboard.mp3');
         this.ambientAudio.loop = true;
-        this.ambientAudio.volume = 0.3;
+        this.ambientAudio.volume = 0.2; // Lower volume for intro
         
         // Create story music element with REAL file
         this.storyAudio = new Audio('audio/background music for stories.mp3');
@@ -37,14 +42,65 @@ class AudioSystem {
         this.storyAudio.volume = 0.25;
         
         // Preload audio files
+        this.introAudio.load();
         this.ambientAudio.load();
         this.storyAudio.load();
         
         // Load voices
         await this.loadVoices();
         
-        console.log('Audio System initialized with real audio files');
+        console.log('Audio System initialized with British intro speech');
         this.isInitialized = true;
+        
+        // Auto-play intro after user interaction
+        this.setupAutoIntro();
+    }
+    
+    setupAutoIntro() {
+        // Wait for first user interaction, then play intro
+        const playIntro = async () => {
+            if (!this.hasPlayedOpening) {
+                this.hasPlayedOpening = true;
+                await this.playOpeningSequence();
+                document.removeEventListener('click', playIntro);
+                document.removeEventListener('keydown', playIntro);
+            }
+        };
+        
+        document.addEventListener('click', playIntro);
+        document.addEventListener('keydown', playIntro);
+    }
+    
+    async playOpeningSequence() {
+        try {
+            console.log('🎭 Playing British lady intro...');
+            
+            // Start ambient music at low volume
+            if (this.ambientAudio) {
+                this.ambientAudio.volume = 0.15;
+                await this.ambientAudio.play();
+                this.musicEnabled = true;
+                this.updateAudioControls();
+            }
+            
+            // Play intro speech
+            if (this.introAudio) {
+                await this.introAudio.play();
+                this.voEnabled = true;
+                this.updateAudioControls();
+                
+                // When intro finishes, increase ambient volume
+                this.introAudio.addEventListener('ended', () => {
+                    if (this.ambientAudio) {
+                        this.ambientAudio.volume = 0.3;
+                    }
+                    console.log('✨ Welcome sequence complete');
+                });
+            }
+            
+        } catch (error) {
+            console.log('Auto-play blocked, waiting for user interaction');
+        }
     }
     
     async loadVoices() {

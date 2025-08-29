@@ -61,6 +61,45 @@ const MEMORY_STORIES = {
   }
 };
 
+// Side Quest Memory Fragments (special knowledge unlocked from GitHub issues)
+const SIDE_QUEST_MEMORIES = {
+  79: {
+    title: "Sutherland's Constraint",
+    story: "In 1963, Ivan Sutherland drew the first digital line. With Sketchpad, he opened the door between thought and pixel. Every constraint becomes possibility...",
+    audio: "side_quest_sutherland.mp3",
+    reward: { xp: 150, coins: 100, special: "PIONEER_WISDOM" },
+    type: "historical"
+  },
+  80: {
+    title: "The Utah Teapot",
+    story: "Martin Newell needed a test model - complex enough to challenge, simple enough to understand. His teapot became legend, the digital grail of computer graphics...",
+    audio: "side_quest_teapot.mp3", 
+    reward: { xp: 200, coins: 150, special: "SACRED_GEOMETRY" },
+    type: "artifact"
+  },
+  81: {
+    title: "Phong's Shadow",
+    story: "Bui Tuong Phong saw light differently. His shading algorithm made surfaces breathe with realistic illumination. In mathematical beauty, he found visual truth...",
+    audio: "side_quest_phong.mp3",
+    reward: { xp: 175, coins: 125, special: "ILLUMINATION_MASTERY" },
+    type: "technique"
+  },
+  82: {
+    title: "The Blender Fund", 
+    story: "Ton Roosendaal's vision: free the tools, liberate creativity. From proprietary chains, he forged open-source freedom. The community became the creation...",
+    audio: "side_quest_blender.mp3",
+    reward: { xp: 250, coins: 200, special: "OPEN_SOURCE_SPIRIT" },
+    type: "philosophy"
+  },
+  83: {
+    title: "The Golden Ratio",
+    story: "φ = 1.618... In this number lies nature's composition secret. From nautilus shells to galaxy spirals, the divine proportion guides all beautiful things...",
+    audio: "side_quest_golden.mp3",
+    reward: { xp: 300, coins: 250, special: "DIVINE_PROPORTION" },
+    type: "mathematical"
+  }
+};
+
 // XP and Coin calculation system
 const PROGRESSION_SYSTEM = {
   baseXP: 100,
@@ -114,4 +153,4 @@ const STORY_PROGRESSION = {
   }
 };
 
-export { MEMORY_STORIES, PROGRESSION_SYSTEM, STORY_PROGRESSION };
+export { MEMORY_STORIES, SIDE_QUEST_MEMORIES, PROGRESSION_SYSTEM, STORY_PROGRESSION };
