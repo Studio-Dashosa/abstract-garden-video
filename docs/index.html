@@ -551,6 +551,7 @@
         </div>
     </div>
 
+    <script src="js/task-values.js"></script>
     <script>
         // Global state
         let issues = [];
@@ -558,20 +559,6 @@
             voEnabled: false,
             musicEnabled: false,
             introPlayed: false
-        };
-
-        // Variable XP/Coin system based on issue complexity
-        const REWARD_SYSTEM = {
-            labels: {
-                'Sprint 1': { xp: 50, coins: 25, value: 75 },
-                'Sprint 2': { xp: 100, coins: 50, value: 150 },
-                'Sprint 3': { xp: 150, coins: 75, value: 225 },
-                'side-quest': { xp: 200, coins: 100, value: 300 },
-                'epic': { xp: 500, coins: 250, value: 1000 },
-                'bug': { xp: 25, coins: 10, value: 50 },
-                'enhancement': { xp: 75, coins: 35, value: 100 }
-            },
-            default: { xp: 50, coins: 25, value: 100 }
         };
 
         // Initialize on page load
@@ -603,26 +590,23 @@
         });
 
         function calculateRewards(issue) {
-            // Check each label and sum rewards
-            let totalXP = 0;
-            let totalCoins = 0;
-            let totalValue = 0;
-            
-            if (issue.labels && issue.labels.length > 0) {
-                issue.labels.forEach(label => {
-                    const reward = REWARD_SYSTEM.labels[label.name] || REWARD_SYSTEM.default;
-                    totalXP += reward.xp;
-                    totalCoins += reward.coins;
-                    totalValue += reward.value;
-                });
-            } else {
-                // No labels, use default
-                totalXP = REWARD_SYSTEM.default.xp;
-                totalCoins = REWARD_SYSTEM.default.coins;
-                totalValue = REWARD_SYSTEM.default.value;
+            // Use the detailed task valuation system
+            if (typeof TASK_VALUES !== 'undefined' && TASK_VALUES[issue.number]) {
+                return TASK_VALUES[issue.number];
             }
             
-            return { xp: totalXP, coins: totalCoins, value: totalValue };
+            // Fallback to label-based calculation for unknown issues
+            const labels = issue.labels?.map(l => l.name) || [];
+            let xp = 50, coins = 25, value = 100; // defaults
+            
+            // Adjust based on labels
+            if (labels.includes('epic')) { xp = 500; coins = 250; value = 1000; }
+            else if (labels.includes('Sprint 3')) { xp = 150; coins = 75; value = 225; }
+            else if (labels.includes('Sprint 2')) { xp = 100; coins = 50; value = 150; }
+            else if (labels.includes('side-quest')) { xp = 200; coins = 100; value = 300; }
+            else if (labels.includes('bug')) { xp = 25; coins = 10; value = 50; }
+            
+            return { xp, coins, value };
         }
 
         function updateDashboard() {
@@ -645,6 +629,13 @@
                 totalCoins += rewards.coins;
                 portfolioValue += rewards.value;
             });
+            
+            // Add completion bonuses
+            const completionRate = closedIssues.length / realIssues.length;
+            if (completionRate >= 0.25) portfolioValue += 500;  // 25% bonus
+            if (completionRate >= 0.50) portfolioValue += 1000; // 50% bonus
+            if (completionRate >= 0.75) portfolioValue += 2000; // 75% bonus
+            if (completionRate >= 1.00) portfolioValue += 5000; // 100% completion master bonus
             
             // Calculate level from XP
             const level = Math.floor(Math.sqrt(totalXP / 100)) + 1;
@@ -870,13 +861,35 @@
                 const suggestion = suggestTaskAssignment(task);
                 const isRecommended = currentUser && suggestion === currentUser;
                 
+                // Get complexity and time from task values
+                const complexity = rewards.complexity || 'medium';
+                const time = rewards.time || '?';
+                const skill = rewards.skill || 'general';
+                
+                // Color code by complexity
+                const complexityColor = {
+                    'trivial': 'var(--faded-text)',
+                    'easy': 'var(--success-green)',
+                    'medium': 'var(--soul-blue)',
+                    'hard': 'var(--ember-glow)',
+                    'expert': 'var(--blood-red)'
+                }[complexity] || 'var(--pale-text)';
+                
                 return `
                     <div style="background: var(--stone-dark); border: 1px solid ${isRecommended ? 'var(--soul-blue)' : 'var(--border-iron)'}; padding: 1rem; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                             <span style="color: var(--faded-text);">#${task.number}</span>
-                            <span style="color: var(--ember-glow); font-weight: bold;">+${rewards.xp} XP</span>
+                            <div style="text-align: right;">
+                                <span style="color: var(--ember-glow); font-weight: bold;">+${rewards.xp} XP</span>
+                                <span style="color: var(--pale-text); margin-left: 0.5rem;">${rewards.value}</span>
+                            </div>
                         </div>
                         <h3 style="color: var(--pale-text); margin: 0.5rem 0;">${task.title}</h3>
+                        <div style="display: flex; gap: 1rem; margin: 0.5rem 0; font-size: 0.85rem;">
+                            <span style="color: ${complexityColor};">${complexity.toUpperCase()}</span>
+                            <span style="color: var(--faded-text);">⏰ ${time}</span>
+                            <span style="color: var(--faded-text);">🔧 ${skill}</span>
+                        </div>
                         ${isRecommended ? '<p style="color: var(--soul-blue); font-size: 0.9rem;">⭐ Recommended for you</p>' : ''}
                         ${assignment ? `<p style="color: var(--ember-glow); font-size: 0.9rem;">Claimed by ${assignment}</p>` : ''}
                         <div style="margin-top: 1rem;">
